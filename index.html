@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DA 學習平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f0e0c;--paper:#f5f2ec;--cream:#ede9e0;
+  --accent:#c84b2f;--blue:#2a5f8f;--green:#3a7d52;
+  --gold:#b8902a;--muted:#7a7068;--border:#d4cfc4;
+  --card:#faf8f4;--mono:'IBM Plex Mono',monospace;
+  --sans:'Noto Sans TC',sans-serif;
+}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7}
+button{cursor:pointer;font-family:var(--sans)}
+input,select,textarea{font-family:var(--sans)}
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:52px;border-bottom:2px solid var(--accent)}
+.nav-brand{font-family:var(--mono);font-size:13px;color:var(--paper);display:flex;align-items:center;gap:8px}
+.nav-brand span{color:var(--accent)}
+.nav-tabs{display:flex;gap:2px}
+.nav-tab{padding:0 14px;height:52px;display:flex;align-items:center;font-size:12px;color:#a09888;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;letter-spacing:.05em;font-family:var(--mono);transition:all .2s}
+.nav-tab:hover{color:var(--paper)}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* LAYOUT */
+.wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+.page-title{font-size:1.8rem;margin-bottom:6px;font-weight:400}
+.page-sub{font-size:13px;color:var(--muted);margin-bottom:2rem}
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.card h3{font-size:15px;font-weight:500;margin-bottom:10px}
+.card h4{font-size:13px;font-weight:500;color:var(--blue);margin:12px 0 6px}
+.card p{font-size:14px;color:#4a4540;line-height:1.75;margin-bottom:8px}
+.card p:last-child{margin-bottom:0}
+.card ul{padding-left:16px;font-size:14px;color:#4a4540;line-height:1.8}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}.nav-tab{padding:0 10px;font-size:11px}}
+/* HIGHLIGHT BOXES */
+.hl{background:#edf3fa;border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:12px 16px;margin:10px 0;font-size:14px;color:#1a3a5c;line-height:1.75}
+.warn{background:#fef8ec;border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:12px 16px;margin:10px 0;font-size:14px;color:#5a4010;line-height:1.75}
+.ok{background:#e8f5ee;border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:12px 16px;margin:10px 0;font-size:14px;color:#1a4a2a;line-height:1.75}
+/* SUB TABS */
+.sub-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.2rem}
+.sub-btn{padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--card);font-size:12px;color:var(--muted);transition:all .15s}
+.sub-btn:hover{border-color:var(--blue);color:var(--blue)}
+.sub-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+/* SIGNAL ROWS */
+.signal-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;align-items:flex-start}
+.signal-row:last-child{border-bottom:none}
+.signal-label{font-weight:500;margin-bottom:2px;color:var(--ink);flex-shrink:0;min-width:80px}
+.signal-desc{color:#4a4540;line-height:1.65;font-size:13px}
+/* CODE BLOCK */
+.code-block{background:#f8f6f1;border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin:12px 0;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:13px;line-height:1.8;color:#2a2520;margin:0}
+.c-cm{color:#7a8f6a}.c-kw{color:#7c3aed}.c-st{color:#166534}.c-nu{color:#c2410c}.c-fn{color:#1d4ed8}.c-cp{color:#92400e}
+/* FORMULA BOX */
+.formula{background:#f0f4f8;border:1.5px solid #bfdbfe;border-radius:8px;padding:13px 16px;margin:10px 0;font-family:var(--mono);font-size:13px;color:#1e3a5f;line-height:1.8}
+/* NOTES */
+.notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.notes-grid{grid-template-columns:1fr}}
+.note-card{background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:14px;position:relative}
+.note-card.fixed{border-left:3px solid var(--blue)}
+.note-title{font-size:13px;font-weight:500;margin-bottom:6px;color:var(--ink)}
+.note-body{font-size:13px;color:#4a4540;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+.note-body img{max-width:100%;border-radius:6px;margin:6px 0;display:block}
+.note-meta{font-size:11px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
+.note-actions{position:absolute;top:10px;right:10px;display:flex;gap:4px}
+.icon-btn{background:none;border:none;color:var(--muted);font-size:14px;padding:3px 5px;border-radius:4px}
+.icon-btn:hover{color:var(--ink);background:var(--cream)}
+.cat-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;margin-bottom:8px;font-family:var(--mono)}
+.cat-flow{background:#edf3fa;color:#1a3a5c}
+.cat-select{background:#e8f5ee;color:#1a4a2a}
+.cat-entry{background:#fef8ec;color:#5a4010}
+.cat-chipread{background:var(--cream);color:var(--muted)}
+.cat-exit{background:#fdecea;color:#5a1a10}
+.cat-special{background:var(--cream);color:var(--muted)}
+.cat-other{background:var(--cream);color:var(--muted)}
+/* FILTER */
+.filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.filter-btn{padding:5px 12px;border:1.5px solid var(--border);border-radius:14px;background:none;font-size:12px;color:var(--muted)}
+.filter-btn.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal{background:var(--paper);border-radius:12px;padding:1.5rem;width:100%;max-width:480px;border:1px solid var(--border)}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:1rem}
+.field{margin-bottom:12px}
+.field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;background:var(--card);color:var(--ink)}
+.field textarea{min-height:140px;resize:vertical;line-height:1.7}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.btn{padding:8px 18px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;background:none;color:var(--muted)}
+.btn-primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* TRACKER */
+.prog-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.8rem}
+@media(max-width:640px){.prog-grid{grid-template-columns:repeat(3,1fr)}}
+.prog-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.prog-num{font-size:1.4rem;font-weight:500;font-family:var(--mono);color:var(--ink)}
+.prog-label{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.goal-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.goal-item:last-child{border-bottom:none}
+.goal-check{font-size:16px;color:var(--muted);flex-shrink:0;margin-top:1px}
+.goal-check.done{color:var(--green)}
+.goal-title{font-size:14px;font-weight:500;color:var(--ink)}
+.goal-item.done .goal-title{text-decoration:line-through;color:var(--muted)}
+.goal-sub{font-size:12px;color:var(--muted)}
+.tl-row{display:flex;gap:12px;padding:8px 0;position:relative}
+.tl-row:not(:last-child)::after{content:'';position:absolute;left:7px;top:22px;width:2px;height:calc(100% - 8px);background:var(--border)}
+.tl-dot{width:16px;height:16px;border-radius:50%;background:var(--border);border:2px solid var(--border);flex-shrink:0;margin-top:3px}
+.tl-dot.active{background:var(--blue);border-color:var(--blue)}
+.tl-title{font-size:14px;font-weight:500;margin-bottom:2px}
+.tl-desc{font-size:12px;color:var(--muted)}
+/* CERT */
+.cert-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:640px){.cert-grid{grid-template-columns:1fr}}
+.cert-card{background:var(--card);border:1.5px solid var(--border);border-radius:10px;overflow:hidden}
+.cert-card.high{border-color:#bfdbfe}
+.cert-card.acquired{border-color:var(--green);background:#f0fdf4}
+.cert-header{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:8px}
+.cert-badge{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px}
+.cert-name{font-size:14px;font-weight:500;margin-bottom:2px}
+.cert-issuer{font-size:12px;color:var(--muted)}
+.cert-check-btn{padding:5px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--card);color:var(--muted);white-space:nowrap;flex-shrink:0}
+.cert-check-btn.acquired{background:var(--green);color:#fff;border-color:var(--green)}
+.cert-body{padding:0 16px 14px;font-size:13px;color:#4a4540;line-height:1.7}
+.cert-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cert-meta span{font-size:11px;background:var(--cream);padding:2px 8px;border-radius:4px;color:var(--muted)}
+/* PROJECT */
+.proj-card{background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.proj-card.doing{border-color:#fbbf24}
+.proj-card.done{border-color:var(--green)}
+.proj-header{display:flex;align-items:center;gap:12px;padding:14px 16px}
+.proj-num{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--border);flex-shrink:0}
+.proj-title{font-size:14px;font-weight:500;margin-bottom:2px}
+.proj-desc{font-size:12px;color:var(--muted)}
+.proj-status{padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;background:var(--card)}
+.proj-steps{padding:0 16px 14px;display:flex;flex-direction:column;gap:4px}
+.ps-item{display:flex;align-items:center;gap:8px;font-size:13px;color:#4a4540;padding:3px 0}
+.ps-item.done{text-decoration:line-through;color:var(--muted)}
+.ps-check{color:var(--muted);font-size:14px;flex-shrink:0}
+.ps-item.done .ps-check{color:var(--green)}
+/* SKILL */
+.skill-group-title{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:1.2rem 0 10px;display:flex;align-items:center;gap:8px}
+.skill-group-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.skill-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.skill-row:last-child{border-bottom:none}
+.skill-name{font-size:14px;flex:1}
+.stars{display:flex;gap:4px}
+.star{font-size:18px;color:var(--border);cursor:pointer;transition:color .1s}
+.star.lit{color:var(--gold)}
+.skill-pct{font-family:var(--mono);font-size:12px;color:var(--muted);width:36px;text-align:right}
+/* LOG */
+.log-entry{display:flex;gap:10px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;font-size:14px}
+.log-date{font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0;margin-top:2px}
+.log-del{color:var(--muted);cursor:pointer;flex-shrink:0}
+/* FINANCE */
+.f-table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+.f-table th{background:var(--cream);padding:8px 12px;text-align:left;font-size:12px;font-weight:500;color:var(--muted)}
+.f-table td{padding:8px 12px;border-bottom:1px solid var(--border);line-height:1.6;vertical-align:top}
+.f-table tr:last-child td{border-bottom:none}
+/* QUIZ */
+.quiz-area{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px;margin-top:1.2rem}
+.quiz-q{font-size:14px;font-weight:500;margin-bottom:12px;line-height:1.6}
+.quiz-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.quiz-opt{background:var(--paper);border:1.5px solid var(--border);border-radius:6px;padding:10px 14px;font-size:14px;text-align:left;transition:all .15s}
+.quiz-opt:hover:not(:disabled){border-color:var(--blue)}
+.quiz-opt.correct{background:#e8f5ee;border-color:var(--green);color:#1a4a2a}
+.quiz-opt.wrong{background:#fdecea;border-color:var(--accent);color:#5a1a10}
+.quiz-feedback{font-size:13px;line-height:1.7;padding:10px 14px;border-radius:6px;margin-bottom:8px}
+.quiz-feedback.ok{background:#e8f5ee;color:#1a4a2a}
+.quiz-feedback.no{background:#fdecea;color:#5a1a10}
+.section-label{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:1.5rem 0 10px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+/* STOCK */
+.kline-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+@media(max-width:640px){.kline-grid{grid-template-columns:repeat(2,1fr)}}
+.kline-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.kline-icon{font-size:24px;margin-bottom:6px}
+.kline-name{font-size:12px;font-weight:500;margin-bottom:4px}
+.kline-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.chip-table{width:100%;border-collapse:collapse;font-size:13px}
+.chip-table th{background:var(--cream);padding:8px 12px;text-align:left;font-size:12px;font-weight:500;color:var(--muted)}
+.chip-table td{padding:8px 12px;border-bottom:1px solid var(--border);line-height:1.6;vertical-align:top}
+/* TAGS */
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:3px;margin:2px;font-family:var(--mono)}
+.tag-bull{background:#e8f5ee;color:#1a4a2a}
+.tag-bear{background:#fdecea;color:#5a1a10}
+.tag-neu{background:#edf3fa;color:#1a3a5c}
+/* COMPOUND */
+.compound-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px}
+.compound-label{width:44px;color:var(--muted);font-family:var(--mono);flex-shrink:0}
+.compound-bar-bg{flex:1;background:var(--border);border-radius:3px;height:18px}
+.compound-bar-fill{height:100%;border-radius:3px;background:var(--blue);display:flex;align-items:center;padding-left:6px}
+.compound-bar-text{font-size:11px;color:#fff;font-family:var(--mono);white-space:nowrap}
+/* CUSTOM GOALS */
+.custom-goal-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.custom-goal-item:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useRef}=React;
+
+// ═══════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════
+const STRATEGY_NOTES=[
+  {id:'s1',cat:'flow',title:'選股到出場：完整流程',body:'① 篩選有機會的股票\n② 確認對的時間（大盤格局）\n③ 等盤中訊號（不急進場）\n④ 足夠資訊才判斷（技術面＋籌碼面 1+1）\n\n核心系統：葛蘭碧多空 ＋ 主力籌碼過濾'},
+  {id:'s2',cat:'flow',title:'盤中SOP操作流程',body:'早盤：確認大盤格局（外資期貨 vs 散戶小台）\n12:00：挑選個股名單\n12:30 後：才考慮進場\n\n盤後做功課：\n• 籌碼打勾（盤後警報器）\n• 三種篩選條件跑一遍'},
+  {id:'s3',cat:'chipread',title:'大盤格局判斷',body:'外資期貨＋ + 散戶小台－ → 多頭格局\n外資期貨－ + 散戶小台＋ → 空頭格局\n符號相同 → 震盪\n\n短期三指標：\n雙綠一紅 → 偏空\n雙紅一綠 → 偏多\n交雜 → 調節格局'},
+  {id:'s4',cat:'select',title:'追漲六心法',body:'1. 集中：籌碼集中在特定人手上\n2. 糾結：5/10/20均線糾結，60不遠\n3. 壓縮：價穩量縮（全紅最好）\n4. 突破：長紅K突破切線/頸線/前高\n5. 帶量：突破帶量，非詭異大量\n6. 實紅：上影線不超過1/2\n\n初學版：突破＋四季五燈獎'},
+  {id:'s5',cat:'select',title:'盤後三種篩選法',body:'① 突破型\n突破＋三個籌碼（周線圖看壓力）\n\n② 平穩突破型\n突破平穩期＋法人大買超＋月營收成長\n→ 投信排序，土洋合作\n\n③ 多排回檔型\n多頭排列回檔＋法人買超\n→ 投信排序，找跌的\n\n隔日注意：\n長紅隔日不追高 / 跌破算失敗\n買點一：量縮回收側下影\n買點二：整理再次過前高'},
+  {id:'s6',cat:'entry',title:'技籌邏輯：準創高選股',body:'準創高 = 頂上無壓（無解套賣壓）\n\n兩種情境：\n1. 尚未創高、準備創高\n2. 創高不久、賣壓尚未出籠\n\n最強組合：\n籌碼五燈獎 ＋ 月營收成長 ＋ K棒在長均線之上'},
+  {id:'s7',cat:'entry',title:'切線畫法',body:'1. 連接兩個高點（須含影線）\n2. 中間不能有K棒穿越\n3. 其中一個高點可延伸至最低點\n\n突破切線 = 賣壓結束訊號'},
+  {id:'s8',cat:'entry',title:'仙人指路',body:'1. 突破盤整（不能突破太多）\n2. 上影線長\n3. 量增（非爆大量）\n4. 出現在過去壓力區間\n\n使用時機：\n葛蘭碧訊號少 / 晚上做功課 / 股票漲多'},
+  {id:'s9',cat:'entry',title:'大盤回檔的買點',body:'支撐種類（必須是上揚均線）：\n頸線、缺口、趨勢線、前波高點\n\n雙重支撐 = 符合兩個以上\n確認訊號 = 長下影線或短紅K\n\n多頭兩種買法：突破買、回檔買'},
+  {id:'s10',cat:'chipread',title:'六心法籌碼深解',body:'集中的本質：主力在盤整/盤跌段吸貨\n糾結的本質：避免追高/末升段\n壓縮的本質：價格波動小，籌碼安定\n\n六心法適用時機：盤整段或盤跌段'},
+  {id:'s11',cat:'exit',title:'出場三種方法',body:'① 移動停利\n每次創高後設回檔%數，不斷往上移\n\n② 關鍵K棒停利\n帶量長紅、跳空紅K = 關鍵K棒\n跌破 = 警示，再次跌破 = 出場\n\n③ 達標出場法\n絕對達標 → 重視停利\n時間達標 → 當沖/隔日衝\n空間達標 → 下壓季線是壓力'},
+  {id:'s12',cat:'special',title:'除權息操作法',body:'工具：股期、權證（除息當天即領利）\n\n步驟：\n1. 監控：勾選股期、權證\n2. 特殊事件：勾選除權息\n3. 籌碼面：勾選（必要）\n4. 除權日、除息日打勾'},
+  {id:'s13',cat:'special',title:'處置股注意',body:'三天第一款：漲跌幅過大被關注\n連續5天注意股：持續異常\n\n操作：進入處置後 → 拉回找買點\n⚠️ 流動性差、買賣價差大'},
+];
+
+const CAT_LABELS={flow:'選股流程',select:'選股系統',entry:'進場判斷',chipread:'籌碼判讀',exit:'出場規則',special:'特殊操作',other:'其他',tech:'技術面',chip:'籌碼面',fund:'基本面',finance:'財商'};
+const CAT_CLASS={flow:'cat-flow',select:'cat-select',entry:'cat-entry',chipread:'cat-chipread',exit:'cat-exit',special:'cat-special',other:'cat-other',tech:'cat-flow',chip:'cat-chipread',finance:'cat-entry'};
+
+// ═══════════════════════════════════════════
+// STORAGE UTILS
+// ═══════════════════════════════════════════
+const LS={
+  get:(k)=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+};
+
+// ═══════════════════════════════════════════
+// SHARED COMPONENTS
+// ═══════════════════════════════════════════
+function Card({children,style}){return <div className="card" style={style}>{children}</div>}
+function Hl({children}){return <div className="hl">{children}</div>}
+function Warn({children}){return <div className="warn">{children}</div>}
+function Ok({children}){return <div className="ok">{children}</div>}
+function Formula({children}){return <div className="formula">{children}</div>}
+function SectionLabel({children}){return <div className="section-label">{children}</div>}
+function SubNav({items,active,onChange}){
+  return <div className="sub-nav">
+    {items.map(({id,label})=><button key={id} className={`sub-btn${active===id?' active':''}`} onClick={()=>onChange(id)}>{label}</button>)}
+  </div>
+}
+
+// ═══════════════════════════════════════════
+// QUIZ COMPONENT
+// ═══════════════════════════════════════════
+const QUIZ_DATA={
+  pandas:[
+    {q:'你想篩選 satisfaction >= 4 且 channel == "電話" 的資料，哪個正確？',opts:["df[df['satisfaction']>=4 and df['channel']=='電話']","df[(df['satisfaction']>=4) & (df['channel']=='電話')]","df[df['satisfaction']>=4 & df['channel']=='電話']","df.filter(satisfaction>=4)"],ans:1,exp:'多條件要用 & 或 |，每個條件要用括號包住。Python 的 and 不能用在 Pandas 篩選。'},
+    {q:"df.groupby('issue_type')['satisfaction'].mean() 會產生什麼？",opts:['整張 DataFrame','一個 Series，index 是 issue_type，值是各組平均','一個數字','一個有兩欄的 DataFrame'],ans:1,exp:'groupby 搭配單一欄位和 .mean() 回傳 Series，index 是分組鍵。'},
+    {q:'想知道 issue_type 欄有哪些不重複的值，用哪個？',opts:["df['issue_type'].count()",'df.issue_type.distinct()',"df['issue_type'].unique()",'df.groupby("issue_type").size()'],ans:2,exp:'.unique() 回傳所有不重複的值；.nunique() 回傳數量；.value_counts() 回傳每個值出現幾次。'},
+    {q:"df.describe() 主要用來做什麼？",opts:['顯示每欄的資料型態','顯示數值欄的統計摘要（平均、標準差、四分位數等）','顯示前幾筆資料','刪除缺失值'],ans:1,exp:'df.describe() 針對數值欄，顯示 count、mean、std、min、25%、50%、75%、max。'},
+  ],
+  stats:[
+    {q:'p-value = 0.03 代表什麼？',opts:['這個差異有 3% 的機率是真的','假設兩組沒差，卻觀察到這麼極端結果的機率只有 3%','實驗組比控制組好 3%','有 97% 信心兩組有差異'],ans:1,exp:'p-value 是在虛無假設成立的前提下，觀察到目前結果的機率。不是「差異為真的機率」。'},
+    {q:"Cohen's d = 0.15，這個效果量代表？",opts:['效果很大','效果中等','效果很小，即使統計顯著，實務意義可能不大','無法判斷'],ans:2,exp:"Cohen's d < 0.2 是小效果；0.2~0.8 中效果；> 0.8 大效果。"},
+    {q:'Type I Error 是什麼？',opts:['實際有差異，但說沒差','實際沒差異，但說有差','樣本數不夠','p值設定錯誤'],ans:1,exp:'Type I = 偽陽性，冤枉好人。發生機率 = α（通常0.05）。Type II = 偽陰性，放走壞人。'},
+  ],
+  sql:[
+    {q:'WHERE 和 HAVING 最大的差別是？',opts:['WHERE 用在 SELECT，HAVING 用在 GROUP BY','WHERE 在分組前篩選，HAVING 在分組後篩選','WHERE 比 HAVING 快','兩個功能一樣'],ans:1,exp:'WHERE 先執行（分組前），不能用聚合函式。HAVING 在 GROUP BY 之後，可以用 COUNT、AVG 等篩選。'},
+    {q:'SQL 的執行順序，哪個正確？',opts:['SELECT → FROM → WHERE → GROUP BY','FROM → WHERE → GROUP BY → SELECT → ORDER BY','GROUP BY → WHERE → SELECT','SELECT → GROUP BY → WHERE'],ans:1,exp:'正確順序：FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT。'},
+    {q:'LEFT JOIN 和 INNER JOIN 的差別？',opts:['LEFT JOIN 只保留左表；INNER JOIN 只保留右表','INNER JOIN 只保留兩表都有的；LEFT JOIN 保留左表全部，右表缺的填 NULL','兩個結果一樣','LEFT JOIN 比較快'],ans:1,exp:'INNER JOIN 取交集，LEFT JOIN 保留左表全部（右表缺失補 NULL）。'},
+  ],
+};
+function QuizSection({topic}){
+  const data=QUIZ_DATA[topic]||[];
+  const [idx,setIdx]=useState(0);
+  const [answered,setAnswered]=useState(false);
+  const [chosen,setChosen]=useState(null);
+  if(!data.length) return null;
+  if(idx>=data.length) return <div className="quiz-area"><p style={{textAlign:'center',color:'var(--muted)'}}>🎉 這個主題的題目都做完了！</p><button className="btn" style={{display:'block',margin:'12px auto 0'}} onClick={()=>{setIdx(0);setAnswered(false);setChosen(null)}}>重新練習</button></div>;
+  const item=data[idx];
+  const answer=(i)=>{if(answered)return;setAnswered(true);setChosen(i)};
+  const next=()=>{setIdx(i=>i+1);setAnswered(false);setChosen(null)};
+  return <div className="quiz-area">
+    <div className="quiz-q">Q{idx+1}/{data.length}　{item.q}</div>
+    <div className="quiz-opts">
+      {item.opts.map((o,i)=><button key={i} disabled={answered} className={`quiz-opt${answered&&i===item.ans?' correct':''}${answered&&chosen===i&&i!==item.ans?' wrong':''}`} onClick={()=>answer(i)}>{o}</button>)}
+    </div>
+    {answered&&<div className={`quiz-feedback ${chosen===item.ans?'ok':'no'}`}>{chosen===item.ans?'✅ ':'❌ '}{item.exp}</div>}
+    {answered&&<button className="btn btn-primary" onClick={next}>下一題 →</button>}
+  </div>
+}
+
+// ═══════════════════════════════════════════
+// PAGES
+// ═══════════════════════════════════════════
+
+// ── 學習筆記 (Learn) ──
+function LearnPage(){
+  const topics=[{id:'pandas',label:'Pandas'},{id:'eda',label:'EDA'},{id:'stats',label:'統計'},{id:'sql',label:'SQL'},{id:'viz',label:'視覺化'},{id:'ab',label:'A/B測試'}];
+  const [active,setActive]=useState('pandas');
+  return <div className="wrap">
+    <div className="page-title">學習筆記</div>
+    <div className="page-sub">理論 × 程式碼 × 小測驗</div>
+    <SubNav items={topics} active={active} onChange={setActive}/>
+    {active==='pandas'&&<PandasLesson/>}
+    {active==='eda'&&<EDALesson/>}
+    {active==='stats'&&<StatsLesson/>}
+    {active==='sql'&&<SQLLesson/>}
+    {active==='viz'&&<VizLesson/>}
+    {active==='ab'&&<ABLesson/>}
+  </div>
+}
+
+function PandasLesson(){return <>
+  <Card><h3>DataFrame 是什麼？</h3><p>把它想成「超強版 Excel 試算表」——每一欄是一個欄位，每一列是一筆資料。DataFrame 是多欄多列；Series 是單一欄位（一維）。</p>
+  <Hl>認識數據三步驟：<br/>1. <code>df.shape</code> — 幾列幾欄？<br/>2. <code>df.info()</code> — 每欄的型態？有沒有缺失值？<br/>3. <code>df.describe()</code> — 數值欄的平均、最大、最小</Hl></Card>
+  <Card><h3>篩選資料</h3>
+  <div className="code-block"><pre>{`# 篩選單一條件
+df[df['satisfaction'] >= 4]
+
+# 多條件（用 & 和 |，每個條件要加括號）
+df[(df['satisfaction'] >= 4) & (df['channel'] == '電話')]
+
+# 在清單內
+df[df['issue_type'].isin(['退款申請', '產品瑕疵'])]`}</pre></div>
+  <Warn>⚠️ 多條件一定要用括號包住每個條件，而且用 & 不是 and</Warn></Card>
+  <Card><h3>groupby 分組計算</h3><p>把資料按某欄分組再計算，就像 Excel 的樞紐分析表。</p>
+  <div className="code-block"><pre>{`# 各問題類型的平均滿意度
+df.groupby('issue_type')['satisfaction'].mean()
+
+# 同時算多個統計量
+df.groupby('issue_type')['satisfaction'].agg(['mean','count','std'])
+
+# 多欄位分組
+df.groupby(['issue_type','channel'])['satisfaction'].mean()`}</pre></div></Card>
+  <Card><h3>處理缺失值</h3>
+  <div className="code-block"><pre>{`df.isnull().sum()          # 各欄缺失數量
+df.isnull().mean() * 100   # 各欄缺失比例 %
+
+df.dropna()                # 刪除有缺失的列
+df['col'].fillna(df['col'].median(), inplace=True)  # 填補中位數`}</pre></div>
+  <Warn>⚠️ 用平均值填補會讓數據看起來比實際上更整齊，重要分析要說明你怎麼處理缺失值的</Warn></Card>
+  <Card><h3>常見錯誤</h3>
+  <div className="code-block"><pre>{`# ❌ SettingWithCopyWarning
+high_sat = df[df['satisfaction'] >= 4]
+high_sat['label'] = 'good'  # 警告！
+
+# ✅ 正確：用 .copy()
+high_sat = df[df['satisfaction'] >= 4].copy()
+high_sat['label'] = 'good'
+
+# ✅ 或用 .loc
+df.loc[df['satisfaction'] >= 4, 'label'] = 'good'`}</pre></div></Card>
+  <SectionLabel>小測驗</SectionLabel>
+  <QuizSection topic="pandas"/>
+</>}
+
+function EDALesson(){return <>
+  <Card><h3>EDA 是什麼？</h3><p>探索性資料分析（Exploratory Data Analysis）是分析的第一步：在建模前先「看懂」你的數據。目標不是找答案，而是了解數據的特徵和問題。</p></Card>
+  <div className="grid2">
+    <Card><h4>1. 分布</h4><p>每個欄位的值長什麼樣子？是否偏態？有異常值？</p><p style={{color:'var(--muted)',fontSize:'13px'}}>工具：直方圖、箱型圖、df.describe()</p></Card>
+    <Card><h4>2. 缺失值</h4><p>哪些欄位有空值？缺失是隨機還是有規律？</p><p style={{color:'var(--muted)',fontSize:'13px'}}>工具：df.isnull().sum()、df.isnull().mean()</p></Card>
+    <Card><h4>3. 相關性</h4><p>兩個數值欄位之間有關聯嗎？</p><p style={{color:'var(--muted)',fontSize:'13px'}}>工具：df.corr()、散點圖、熱力圖</p></Card>
+    <Card><h4>4. 類別分布</h4><p>文字欄有哪些類別？各類別的比例？</p><p style={{color:'var(--muted)',fontSize:'13px'}}>工具：value_counts()、長條圖</p></Card>
+  </div>
+  <Card><h3>EDA 五步驟框架</h3>
+  <Hl>第一步：我有什麼？ → shape、info、describe、缺失值<br/>第二步：每個欄位長什麼樣？ → 數值畫直方圖，類別用 value_counts<br/>第三步：欄位之間有什麼關係？ → 相關係數、groupby 交叉分析<br/>第四步：有沒有異常？ → IQR 法則、重複資料<br/>第五步：我想問什麼問題？ → 把發現轉成可驗證的假設</Hl></Card>
+  <Card><h3>IQR 異常值偵測</h3>
+  <div className="code-block"><pre>{`Q1 = df['resolution_time'].quantile(0.25)
+Q3 = df['resolution_time'].quantile(0.75)
+IQR = Q3 - Q1
+
+outliers = df[(df['resolution_time'] < Q1 - 1.5*IQR) | 
+              (df['resolution_time'] > Q3 + 1.5*IQR)]
+print(f'異常值：{len(outliers)} 筆')`}</pre></div></Card>
+  <Card><h3>三個常見陷阱</h3>
+  <Warn>⚠️ 相關 ≠ 因果：處理時間長 → 滿意度低，不代表「長導致低」，可能是第三個變數（問題複雜度）在影響兩者</Warn>
+  <Warn>⚠️ 右偏數據用中位數：幾個極端值會大幅拉高平均值，中位數比平均值更能代表典型情況</Warn>
+  <Warn>⚠️ 樣本太少不可信：某個分組只有 3 筆資料，算出的「平均滿意度 5.0」毫無意義。分析前先確認每組至少 20~30 筆</Warn></Card>
+</>}
+
+function StatsLesson(){return <>
+  <Card><h3>p-value 白話解釋</h3><p>p-value 回答的是：「如果兩組本來就沒差，卻看到這麼大差異的機率有多少？」</p>
+  <Hl>用丟硬幣想：<br/>丟10次全正面，機率 = 1/1024 ≈ 0.001<br/>p = 0.001 → 這枚硬幣幾乎不可能是公正的<br/><br/>換成分析：A/B 兩組滿意度差 0.5 分，p = 0.03<br/>→ 這個差異不太可能是隨機的 → 改動有效果</Hl>
+  <Warn>⚠️ 三個誤解：<br/>✗ p = 0.03 不是「有 97% 機率差異是真的」<br/>✗ p 小不代表差異很大（可能差 0.01 分但樣本夠大）<br/>✗ p &gt; 0.05 不等於兩組一定沒差</Warn></Card>
+  <Card><h3>假設檢定四步驟（用客服案例）</h3>
+  <Hl>步驟 1：設定假設<br/>H₀（預設）：新舊流程沒有差異<br/>H₁（你想證明的）：新流程滿意度比較高<br/><br/>步驟 2：設定門檻 → α = 0.05<br/>步驟 3：收集數據，算出 p-value<br/>步驟 4：p &lt; 0.05 → 拒絕 H₀，說「有顯著提升」</Hl></Card>
+  <div className="grid2">
+    <Card><h4>Type I Error（偽陽性）</h4><p>實際沒差，但你說有差 → 推了一個沒用的改動</p><p style={{fontSize:'13px',color:'var(--muted)'}}>發生機率 = α = 0.05</p><Ok>記憶口訣：「狼來了」（亂報警）</Ok></Card>
+    <Card><h4>Type II Error（偽陰性）</h4><p>實際有差，但你說沒差 → 錯過了一個好改動</p><p style={{fontSize:'13px',color:'var(--muted)'}}>與樣本數有關，樣本越多越低</p><Ok>記憶口訣：「真的狼來卻沒發現」</Ok></Card>
+  </div>
+  <Card><h3>t-test 程式碼</h3>
+  <div className="code-block"><pre>{`from scipy import stats
+import numpy as np
+
+ctrl = df[df['group'] == 'control']['satisfaction']
+trt  = df[df['group'] == 'treatment']['satisfaction']
+
+t_stat, p_val = stats.ttest_ind(ctrl, trt)
+print(f't = {t_stat:.3f}, p = {p_val:.4f}')
+
+# Cohen's d（效果量）
+d = (trt.mean()-ctrl.mean()) / np.sqrt((ctrl.std()**2+trt.std()**2)/2)
+size = '小' if abs(d)<0.2 else ('中' if abs(d)<0.8 else '大')
+print(f"Cohen's d = {d:.3f}（{size}效果量）")`}</pre></div></Card>
+  <SectionLabel>小測驗</SectionLabel>
+  <QuizSection topic="stats"/>
+</>}
+
+function SQLLesson(){return <>
+  <Card><h3>SQL 執行順序（很重要！）</h3><p>你按 SELECT→FROM→WHERE 順序寫，但資料庫執行的順序是：</p>
+  <Formula>FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT</Formula>
+  <p>理解這個順序，很多「為什麼不能這樣寫」的問題就解開了。</p></Card>
+  <Card><h3>基本語法</h3>
+  <div className="code-block"><pre>{`SELECT issue_type, COUNT(*) AS ticket_count,
+       AVG(satisfaction) AS avg_sat
+FROM   customer_service
+WHERE  resolved = 1
+GROUP BY issue_type
+HAVING COUNT(*) > 10
+ORDER BY avg_sat DESC
+LIMIT  5;`}</pre></div></Card>
+  <Card><h3>WHERE vs HAVING</h3>
+  <div className="grid2">
+    <div><h4>WHERE</h4><p>分組「前」篩選，不能用聚合函式如 COUNT、AVG</p></div>
+    <div><h4>HAVING</h4><p>分組「後」篩選，可以用聚合函式</p></div>
+  </div>
+  <div className="code-block"><pre>{`-- ✅ 正確
+SELECT channel, AVG(satisfaction)
+FROM customer_service
+WHERE agent_exp >= 2       -- 先篩掉資淺員工
+GROUP BY channel
+HAVING COUNT(*) > 20;     -- 再篩掉樣本太少的
+
+-- ❌ 錯誤：WHERE 不能用 COUNT
+WHERE COUNT(*) > 20        -- 這行會報錯！`}</pre></div></Card>
+  <Card><h3>Window Function</h3><p>普通 GROUP BY 會壓縮成一列。Window Function 不壓縮，每列都加上分組計算的結果。面試常考！</p>
+  <div className="code-block"><pre>{`-- 每列顯示自己的滿意度 + 該 issue_type 的平均
+SELECT ticket_id, issue_type, satisfaction,
+  AVG(satisfaction) OVER (PARTITION BY issue_type) AS issue_avg
+FROM customer_service;
+
+-- ROW_NUMBER：每組內編號，取每組第一名
+SELECT * FROM (
+  SELECT *, ROW_NUMBER() OVER 
+    (PARTITION BY issue_type ORDER BY satisfaction DESC) AS rn
+  FROM customer_service
+) t WHERE rn = 1;`}</pre></div></Card>
+  <SectionLabel>小測驗</SectionLabel>
+  <QuizSection topic="sql"/>
+</>}
+
+function VizLesson(){return <>
+  <Card><h3>選圖指南</h3>
+  <div className="signal-row"><span className="tag tag-bull">長條圖</span><div className="signal-desc">比較不同類別的數值大小。例：各 issue_type 的平均滿意度</div></div>
+  <div className="signal-row"><span className="tag tag-bull">折線圖</span><div className="signal-desc">呈現時間序列趨勢。例：每月票券量變化</div></div>
+  <div className="signal-row"><span className="tag tag-neu">箱型圖</span><div className="signal-desc">比較分布、看異常值。例：各渠道的處理時間分布</div></div>
+  <div className="signal-row"><span className="tag tag-neu">散點圖</span><div className="signal-desc">觀察兩個數值欄位的關係。例：resolution_time vs satisfaction</div></div>
+  <div className="signal-row"><span className="tag tag-bear">熱力圖</span><div className="signal-desc">相關係數矩陣、兩個類別欄位交叉分析</div></div></Card>
+  <Card><h3>圖表設計五原則</h3>
+  <Hl>1. 標題說結論，不是說內容<br/>❌「各問題類型滿意度長條圖」<br/>✅「帳號問題滿意度最低，僅 2.8 分」<br/><br/>2. 移除多餘元素（網格線、邊框、3D 效果）<br/>3. 顏色有意義，不要彩虹圖<br/>4. 軸從零開始（長條圖必須）<br/>5. 字要夠大，至少 12px</Hl></Card>
+  <Card><h3>Matplotlib + Seaborn 程式碼</h3>
+  <div className="code-block"><pre>{`import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 長條圖（加數值標籤）
+fig, ax = plt.subplots(figsize=(8, 4))
+avg_sat = df.groupby('issue_type')['satisfaction'].mean().sort_values()
+colors = ['#c84b2f' if v < 3.5 else '#2a5f8f' for v in avg_sat]
+ax.barh(avg_sat.index, avg_sat.values, color=colors)
+ax.set_title('帳號問題滿意度偏低，需優先改善')
+ax.spines[['top', 'right']].set_visible(False)
+plt.tight_layout(); plt.show()
+
+# 相關性熱力圖
+num_cols = ['resolution_time', 'satisfaction', 'agent_exp']
+sns.heatmap(df[num_cols].corr(), annot=True, fmt='.2f', cmap='coolwarm')
+plt.show()`}</pre></div></Card>
+</>}
+
+function ABLesson(){return <>
+  <Card><h3>A/B 測試完整流程</h3>
+  <div className="signal-row"><div style={{minWidth:80,fontWeight:500,fontSize:14}}>① 定義指標</div><div className="signal-desc">要測量什麼？要在開始前決定，不能看完數據再選</div></div>
+  <div className="signal-row"><div style={{minWidth:80,fontWeight:500,fontSize:14}}>② 算樣本數</div><div className="signal-desc">根據 MDE（最小可偵測效果）、α=0.05、power=0.8 計算</div></div>
+  <div className="signal-row"><div style={{minWidth:80,fontWeight:500,fontSize:14}}>③ 隨機分組</div><div className="signal-desc">確保控制組和實驗組在開始前沒有系統性差異</div></div>
+  <div className="signal-row"><div style={{minWidth:80,fontWeight:500,fontSize:14}}>④ 跑完再看</div><div className="signal-desc">不要中途看結果就停止！這叫「偷看問題」，大幅增加偽陽性</div></div>
+  <div className="signal-row"><div style={{minWidth:80,fontWeight:500,fontSize:14}}>⑤ 檢定+效果量</div><div className="signal-desc">t-test 判斷是否顯著，Cohen's d 判斷差異夠不夠大</div></div></Card>
+  <Card><h3>樣本數計算</h3>
+  <div className="code-block"><pre>{`from statsmodels.stats.power import TTestIndPower
+
+analysis = TTestIndPower()
+
+pooled_std = df['satisfaction'].std()
+MDE = 0.3  # 你想偵測的最小差異
+
+n = analysis.solve_power(
+    effect_size=MDE/pooled_std,
+    alpha=0.05,
+    power=0.8,
+    alternative='two-sided'
+)
+print(f'每組至少需要 {int(n)+1} 筆樣本')`}</pre></div>
+  <Warn>⚠️ MDE 要在測試前根據業務判斷決定，不能因為「樣本數太多」就把 MDE 調大</Warn></Card>
+  <Card><h3>完整分析程式碼</h3>
+  <div className="code-block"><pre>{`from scipy import stats
+import numpy as np
+
+ctrl = df[df['group']=='control']['satisfaction']
+trt  = df[df['group']=='treatment']['satisfaction']
+
+t, p = stats.ttest_ind(ctrl, trt)
+print(f't={t:.3f}, p={p:.4f}')
+print('✅ 統計顯著' if p < 0.05 else '❌ 未達顯著')
+
+d = (trt.mean()-ctrl.mean()) / np.sqrt((ctrl.std()**2+trt.std()**2)/2)
+print(f"Cohen's d = {d:.3f}")`}</pre></div></Card>
+</>}
+
+// ── 股票學習 (Stock) ──
+function StockPage(){
+  const tabs=[{id:'tech',label:'📈 技術面'},{id:'chip',label:'🏦 籌碼面'},{id:'basic',label:'📋 基本面'}];
+  const [tab,setTab]=useState('tech');
+  const techSubs=[{id:'ma',label:'均線系統'},{id:'kline',label:'K線型態'},{id:'trend',label:'趨勢型態'},{id:'indicator',label:'技術指標'},{id:'advanced',label:'進階概念'}];
+  const chipSubs=[{id:'inst',label:'三大法人'},{id:'margin',label:'融資融券'},{id:'conc',label:'籌碼集中度'},{id:'event',label:'事件驅動'}];
+  const [techSub,setTechSub]=useState('ma');
+  const [chipSub,setChipSub]=useState('inst');
+  return <div className="wrap">
+    <div className="page-title">股票學習</div>
+    <div className="page-sub">技術面 × 籌碼面 × 基本面</div>
+    <div className="sub-nav" style={{marginBottom:'1.5rem'}}>
+      {tabs.map(t=><button key={t.id} className={`sub-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}
+    </div>
+    {tab==='tech'&&<><SubNav items={techSubs} active={techSub} onChange={setTechSub}/>
+      {techSub==='ma'&&<TechMA/>}{techSub==='kline'&&<TechKline/>}
+      {techSub==='trend'&&<TechTrend/>}{techSub==='indicator'&&<TechIndicator/>}
+      {techSub==='advanced'&&<TechAdvanced/>}</>}
+    {tab==='chip'&&<><SubNav items={chipSubs} active={chipSub} onChange={setChipSub}/>
+      {chipSub==='inst'&&<ChipInst/>}{chipSub==='margin'&&<ChipMargin/>}
+      {chipSub==='conc'&&<ChipConc/>}{chipSub==='event'&&<ChipEvent/>}</>}
+    {tab==='basic'&&<BasicPage/>}
+  </div>
+}
+function TechMA(){return <>
+  <Card><h3>均線是什麼？</h3><p>均線 = 最近 N 天的平均收盤價。代表「這段時間內買進的人，平均成本是多少」。</p>
+  <Formula>MA(N) = (最近N天收盤價加總) ÷ N</Formula>
+  <Hl>股價在均線上方 → 持有者都賺錢，支撐強<br/>股價跌破均線 → 持有者開始虧損，容易出現賣壓</Hl></Card>
+  <Card><h3>各期均線意義</h3>
+  <div className="signal-row"><div className="signal-label">MA5 週線</div><div className="signal-desc">超短線，假訊號多，短線當沖才常用</div></div>
+  <div className="signal-row"><div className="signal-label" style={{color:'var(--blue)',fontWeight:600}}>MA20 ⭐月線</div><div className="signal-desc">最重要！多空分水嶺。站上月線才算短期多頭，跌破轉弱</div></div>
+  <div className="signal-row"><div className="signal-label">MA60 季線</div><div className="signal-desc">法人最重視的中期均線，季報前後法人以此操作</div></div>
+  <div className="signal-row"><div className="signal-label">MA120 半年線</div><div className="signal-desc">中長期趨勢指標，由空翻多是中長多確立</div></div>
+  <div className="signal-row"><div className="signal-label">MA240 年線</div><div className="signal-desc">長期牛熊分界，大盤跌破年線要特別謹慎</div></div></Card>
+  <div className="grid2">
+    <Card><h3>多頭排列</h3><Ok>MA5 &gt; MA10 &gt; MA20 &gt; MA60<br/>趨勢向上，回測均線是加碼機會</Ok></Card>
+    <Card><h3>空頭排列</h3><Warn>MA5 &lt; MA10 &lt; MA20 &lt; MA60<br/>趨勢向下，反彈到均線是減碼機會</Warn></Card>
+  </div>
+  <Card><h3>乖離率（BIAS）</h3>
+  <Formula>乖離率(%) = (現價 - 均線值) ÷ 均線值 × 100%</Formula>
+  <p><strong>MA20 正常範圍：±4~8%</strong></p>
+  <div className="grid2">
+    <Hl>正乖離 &gt; +8%：短期超漲<br/>不適合追高，等回測均線</Hl>
+    <Warn>負乖離 &lt; -8%：短期超跌<br/>注意反彈，但空頭趨勢中超跌後容易繼續跌</Warn>
+  </div></Card>
+</>}
+function TechKline(){return <>
+  <Card><h3>K線基本構成</h3><p>每根K線 = 開盤、收盤、最高、最低四個價格</p>
+  <Hl>上影線長 → 盤中漲高被打下來，上方有賣壓<br/>下影線長 → 盤中跌深被撐上來，下方有買盤</Hl></Card>
+  <Card><h3>常見單根K線型態</h3>
+  <div className="kline-grid">
+    {[['🔴','長紅K','實體長，多方強勢無懸念'],['⚫','長黑K','空方強勢，當天賣壓沉重'],['➕','十字線','多空拉鋸，趨勢可能轉變'],['🔨','錘子線','下影線長，下跌後出現反轉機率高'],['☄️','射擊之星','上影線長，上漲後出現頭部訊號'],['🕳️','跳空缺口','力道強烈，缺口是支撐/壓力']].map(([icon,name,desc])=><div key={name} className="kline-item"><div className="kline-icon">{icon}</div><div className="kline-name">{name}</div><div className="kline-desc">{desc}</div></div>)}
+  </div></Card>
+  <Card><h3>組合K線型態</h3>
+  <div className="grid2">
+    <div><h4>看漲組合</h4>
+    <div className="signal-row"><div style={{minWidth:70,fontWeight:500,fontSize:13}}>晨星</div><div className="signal-desc">長黑→小十字→長紅。下跌後出現，反轉向上</div></div>
+    <div className="signal-row"><div style={{minWidth:70,fontWeight:500,fontSize:13}}>看漲吞噬</div><div className="signal-desc">大紅K完全包住前一根黑K，多方一口氣吃掉空方</div></div></div>
+    <div><h4>看跌組合</h4>
+    <div className="signal-row"><div style={{minWidth:70,fontWeight:500,fontSize:13}}>夜星</div><div className="signal-desc">長紅→小十字→長黑。上漲後出現，反轉向下</div></div>
+    <div className="signal-row"><div style={{minWidth:70,fontWeight:500,fontSize:13}}>看跌吞噬</div><div className="signal-desc">大黑K包住前紅K，高位出現特別有效</div></div></div>
+  </div>
+  <Warn>K線型態只是機率，要配合位置（高位/低位）+ 成交量才有效</Warn></Card>
+</>}
+function TechTrend(){return <>
+  <Card><h3>趨勢線畫法</h3>
+  <div className="grid2">
+    <div><h4>上升趨勢線（支撐）</h4><p>連接兩個以上的波段低點。跌回這條線是觀察買點，跌破代表趨勢可能轉變</p></div>
+    <div><h4>下降趨勢線（壓力）</h4><p>連接兩個以上的波段高點。突破代表空頭動能衰竭，可能轉多</p></div>
+  </div></Card>
+  <Card><h3>常見價格型態</h3>
+  <div className="signal-row"><div className="signal-label">頭肩頂</div><div className="signal-desc">三個高點，中間最高。跌破頸線是賣出訊號，高位出現跌幅通常很大</div></div>
+  <div className="signal-row"><div className="signal-label">雙頂 M頭</div><div className="signal-desc">兩個相近高點，第二個沒突破第一個，跌破中間低谷確認</div></div>
+  <div className="signal-row"><div className="signal-label">雙底 W底</div><div className="signal-desc">兩個相近低點，突破中間高點是中期買進機會</div></div>
+  <div className="signal-row"><div className="signal-label">三角收斂</div><div className="signal-desc">高點越來越低、低點越來越高。突破哪邊往哪走，要放量</div></div>
+  <div className="signal-row"><div className="signal-label">旗形整理</div><div className="signal-desc">急漲後縮量整理，突破旗頂放量繼續。主升段加碼最好機會</div></div></Card>
+  <Card><h3>支撐與壓力互換</h3><Hl>被跌破的支撐 → 之後變成壓力<br/>被突破的壓力 → 之後變成支撐<br/>這是技術分析最核心的概念之一</Hl></Card>
+</>}
+function TechIndicator(){return <>
+  <Card><h3>RSI 相對強弱指標</h3><p>衡量「最近這段時間，買方力道跟賣方力道誰比較強」，數值 0–100。</p>
+  <Hl>RSI &gt; 80：超買，注意回調（體力快耗盡）<br/>RSI 50~80：多頭區間<br/>RSI 20~50：空頭區間<br/>RSI &lt; 20：超賣，注意反彈</Hl>
+  <div className="grid2">
+    <Warn>頂背離：股價創新高，RSI 沒創新高 → 上漲動能衰退</Warn>
+    <Ok>底背離：股價創新低，RSI 沒創新低 → 下跌動能衰竭</Ok>
+  </div></Card>
+  <Card><h3>MACD</h3><p>把它想成「短跑 vs 長跑選手的差距」——DIF（快線）= EMA12 - EMA26，DEA（慢線）= DIF 的9日平均，柱狀圖 = DIF - DEA</p>
+  <div className="grid2">
+    <Ok>金叉：DIF 往上穿越 DEA<br/>底背離：股價新低但柱狀谷底越來越淺</Ok>
+    <Warn>死叉：DIF 往下穿越 DEA<br/>頂背離：股價新高但柱狀峰值越來越低</Warn>
+  </div></Card>
+  <div className="grid2">
+    <Card><h3>KD 指標</h3><p>K &gt; 80 或 D &gt; 80：超買<br/>K &lt; 20 或 D &lt; 20：超賣<br/>K 上穿 D：金叉 ／ K 下穿 D：死叉</p><Warn>強勢趨勢中容易鈍化，不能單靠KD操作</Warn></Card>
+    <Card><h3>布林通道</h3><p>MA20 為中線，±2 標準差為上下軌</p><Hl>通道收縮 → 醞釀行情<br/>放量突破上軌 → 最強訊號</Hl></Card>
+  </div>
+  <Card><h3>量價關係</h3>
+  <div className="chip-table" style={{marginTop:8}}>
+    <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+      <thead><tr>{['價格','成交量','意義','操作'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 12px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+      <tbody>
+        {[['↑漲','↑放量','量價齊揚，多頭健康','可持有或加碼'],['↑漲','↓縮量','漲勢無力，動能不足','留意，不宜追高'],['↓跌','↑放量','出貨跌破，空頭確認','出場或減碼'],['↓跌','↓縮量','跌勢收斂，可能止跌','觀察是否止穩']].map((row,i)=><tr key={i}>{row.map((c,j)=><td key={j} style={{padding:'8px 12px',borderBottom:'1px solid var(--border)',lineHeight:1.6}}>{c}</td>)}</tr>)}
+      </tbody>
+    </table>
+  </div></Card>
+</>}
+function TechAdvanced(){return <>
+  <Card><h3>費波那契回撤</h3><p>找到一段漲幅（低點到高點），標出回撤比例，預估支撐位。</p>
+  <Hl>0.382 回撤：強勢整理，多頭仍強<br/>0.5 回撤：多空平衡，最常見整理幅度<br/>0.618 回撤：黃金比例，守住多頭格局仍在，跌破轉弱</Hl>
+  <Warn>費波那契是輔助工具，搭配均線和成交量使用效果更好</Warn></Card>
+  <Card><h3>艾略特波浪（簡介）</h3>
+  <Formula>推動波：1波 → 2波回調 → 3波（最長最強）→ 4波回調 → 5波<br/>修正波：A波下跌 → B波反彈 → C波最終跌</Formula>
+  <p style={{marginTop:8}}>最實用的應用：<strong>3波通常最長最強</strong>，抓住從2波底部到3波頂部是最好賺的段落</p></Card>
+</>}
+function ChipInst(){return <>
+  <Card><h3>大盤格局判斷</h3>
+  <div className="signal-row"><div style={{minWidth:50,fontFamily:'var(--mono)',fontSize:12,color:'var(--green)',fontWeight:600}}>看多</div><div className="signal-desc">外資期貨＋（多）+ 散戶小台－（空）→ 籌碼多頭</div></div>
+  <div className="signal-row"><div style={{minWidth:50,fontFamily:'var(--mono)',fontSize:12,color:'var(--accent)',fontWeight:600}}>看空</div><div className="signal-desc">外資期貨－（空）+ 散戶小台＋（多）→ 籌碼空頭</div></div>
+  <div className="signal-row"><div style={{minWidth:50,fontFamily:'var(--mono)',fontSize:12,fontWeight:600}}>震盪</div><div className="signal-desc">符號相同 → 震盪格局</div></div>
+  <Hl style={{marginTop:10}}>短期走向（外資現貨、外資期貨、散戶小台三者）<br/>雙綠一紅 → 偏空 ／ 雙紅一綠 → 偏多 ／ 交雜 → 調節</Hl></Card>
+  <div className="grid2">
+    <Card><h3>外資</h3><p>規模最大，影響大盤最重要的法人。</p><Hl>連續買超5天以上 → 中長線偏多<br/>買超但股價不漲 → 消化賣壓，之後可能噴出</Hl><Warn>自營商避險部位不代表方向，不要誤讀！</Warn></Card>
+    <Card><h3>投信</h3><p>國內基金，對中小型股影響力大。</p><Hl>連續買超 → 基金經理人看好</Hl><Hl>季末作帳：3、6、9、12月底前投信拉抬持股，季末前兩週特別容易漲</Hl></Card>
+  </div></>}
+function ChipMargin(){return <>
+  <div className="grid2">
+    <Card><h3>融資（借錢買股）</h3><p>你有4萬，借6萬，用10萬買股。槓桿放大報酬也放大風險。</p><Warn>融資餘額高 = 大量散戶在用槓桿追高。一旦跌破某價位就會觸發斷頭賣壓，股價越跌越快</Warn></Card>
+    <Card><h3>融券（借股放空）</h3><p>借股票來賣，等跌了再買回還，賺差價。</p><Hl>融券餘額高 + 股價上漲 → 軋空行情，放空的人被迫買回推動股價急漲</Hl></Card>
+  </div>
+  <Card><h3>融資維持率</h3>
+  <Formula>融資維持率 = 股票市值 ÷ 融資金額 × 100%{'\n'}低於 130% → 收追繳通知 → 48小時未補 → 斷頭</Formula>
+  <div className="grid2">
+    <Ok>股價漲 + 融資減少 → 籌碼轉乾淨，後市可能繼續漲</Ok>
+    <Warn>股價漲 + 融資增加 → 散戶追高，風險增加</Warn>
+  </div></Card></>}
+function ChipConc(){return <>
+  <Card><h3>籌碼集中度</h3><p>集保庫存每週公布，觀察大戶（1000張以上）vs 散戶（1-10張）的消長。</p>
+  <Hl>大戶人數增加 + 散戶人數減少 + 股東總數減少 → 持續集中，值得注意</Hl>
+  <div className="grid2">
+    <Ok>健康換手：短線獲利者賣出，法人或大戶接 → 籌碼優化，繼續漲機率高</Ok>
+    <Warn>危險換手：法人大戶賣出，散戶接盤 → 主力出貨，可能見頂</Warn>
+  </div></Card>
+  <Card><h3>借券 vs 融券</h3>
+  <div className="signal-row"><div className="signal-label">融券</div><div className="signal-desc">散戶為主，額度有限。融券餘額高是散戶看空的指標</div></div>
+  <div className="signal-row"><div className="signal-label">借券</div><div className="signal-desc">法人機構為主，額度大。外資借券賣出大增是更強烈的看空訊號，比融券更有參考性</div></div></Card></>}
+function ChipEvent(){return <>
+  <Card><h3>重要籌碼事件</h3>
+  <div className="signal-row"><div className="signal-label">除息前</div><div className="signal-desc">融券強制回補 → 大量買盤 → 軋空行情，股價容易被推高</div></div>
+  <div className="signal-row"><div className="signal-label">法說會後</div><div className="signal-desc">「利多出盡是利空」：提前布局的法人開始獲利了結，股價可能反跌。常見陷阱！</div></div>
+  <div className="signal-row"><div className="signal-label">季末作帳</div><div className="signal-desc">3、6、9、12月底前，投信持續買進持股讓基金淨值好看，季末前兩週容易漲</div></div>
+  <div className="signal-row"><div className="signal-label">季報公布</div><div className="signal-desc">財報公布前若投信持續買超，可能預期優於市場。公布後確實優且投信繼續持有，通常繼續強勢</div></div></Card></>}
+function BasicPage(){return <>
+  <Card><h3>重要財務指標</h3>
+  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+    <thead><tr>{['指標','說明','一般參考值'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 12px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+    <tbody>{[['EPS','每股盈餘 = 稅後淨利 ÷ 股數','越高越好，持續成長最重要'],['本益比(PE)','股價 ÷ EPS','15~20倍算合理，視產業而定'],['股息殖利率','現金股利 ÷ 股價','台灣傳產電信常見3-6%'],['ROE','稅後淨利 ÷ 股東權益','連續 > 15% 是優質標準'],['負債比率','總負債 ÷ 總資產','傳產 < 40%']].map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j} style={{padding:'8px 12px',borderBottom:'1px solid var(--border)'}}>{c}</td>)}</tr>)}</tbody>
+  </table></Card>
+  <Card><h3>月營收：最快速的先行指標</h3><p>台灣上市公司每月10日前公布上月營收。觀察月營收年增率（YoY）的趨勢，比等財報更即時。連續月營收成長加速，往往先於股價上漲。</p></Card>
+</>}
+
+// ── 策略筆記 (Notes) ──
+function NotesPage(){
+  const [filter,setFilter]=useState('all');
+  const [userNotes,setUserNotes]=useState(()=>LS.get('da_user_notes')||[]);
+  const [modal,setModal]=useState(null); // null | {mode:'add'|'edit', note:{}}
+  const [editingNote,setEditingNote]=useState({title:'',cat:'other',body:''});
+
+  const save=(notes)=>{setUserNotes(notes);LS.set('da_user_notes',notes)};
+  const openAdd=()=>{setEditingNote({title:'',cat:'other',body:''});setModal({mode:'add'})};
+  const openEdit=(n)=>{setEditingNote({...n});setModal({mode:'edit',id:n.id})};
+  const saveNote=()=>{
+    if(!editingNote.body.trim()){alert('請輸入內容');return}
+    const now=new Date();
+    const date=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+    if(modal.mode==='edit'){
+      save(userNotes.map(n=>n.id===modal.id?{...n,...editingNote,date}:n));
+    }else{
+      save([{id:'u'+Date.now(),...editingNote,date},...userNotes]);
+    }
+    setModal(null);
+  };
+  const del=(id)=>{if(confirm('確定刪除？'))save(userNotes.filter(n=>n.id!==id))};
+
+  const allCats=['all','flow','select','entry','chipread','exit','special','other'];
+  const catLabels={all:'全部',...CAT_LABELS};
+  const fixedFiltered=filter==='all'?STRATEGY_NOTES:STRATEGY_NOTES.filter(n=>n.cat===filter);
+  const userFiltered=filter==='all'?userNotes:userNotes.filter(n=>n.cat===filter);
+
+  // Group fixed notes by category
+  const fixedGroups={};
+  fixedFiltered.forEach(n=>{if(!fixedGroups[n.cat])fixedGroups[n.cat]=[];fixedGroups[n.cat].push(n)});
+
+  return <div className="wrap">
+    <div className="page-title">策略筆記</div>
+    <div className="page-sub">固定策略 + 自由補充，隨時記錄想法</div>
+    <div className="filter-bar">
+      {allCats.map(cat=><button key={cat} className={`filter-btn${filter===cat?' active':''}`} onClick={()=>setFilter(cat)}>{catLabels[cat]||cat}</button>)}
+      <button onClick={openAdd} style={{marginLeft:'auto',padding:'6px 16px',background:'var(--blue)',color:'#fff',border:'none',borderRadius:6,fontSize:13}}>＋ 新增筆記</button>
+    </div>
+    {Object.entries(fixedGroups).map(([cat,notes])=><div key={cat}>
+      <SectionLabel>{CAT_LABELS[cat]||cat}</SectionLabel>
+      <div className="notes-grid">{notes.map(n=><div key={n.id} className="note-card fixed">
+        <div className="note-title">{n.title}</div>
+        <span className={`cat-badge ${CAT_CLASS[n.cat]||'cat-other'}`}>{CAT_LABELS[n.cat]}</span>
+        <div className="note-body">{n.body}</div>
+      </div>)}</div>
+    </div>)}
+    {userFiltered.length>0&&<><SectionLabel>我的補充筆記</SectionLabel>
+    <div className="notes-grid">{userFiltered.map(n=><div key={n.id} className="note-card">
+      <div className="note-actions">
+        <button className="icon-btn" onClick={()=>openEdit(n)}>✏️</button>
+        <button className="icon-btn" onClick={()=>del(n.id)}>🗑️</button>
+      </div>
+      <div className="note-title">{n.title||'（無標題）'}</div>
+      <span className={`cat-badge ${CAT_CLASS[n.cat]||'cat-other'}`}>{CAT_LABELS[n.cat]||n.cat}</span>
+      <div className="note-body">{n.body}</div>
+      <div className="note-meta">{n.date}</div>
+    </div>)}</div></>}
+    {!fixedFiltered.length&&!userFiltered.length&&<div style={{textAlign:'center',padding:'3rem',color:'var(--muted)'}}>這個分類還沒有筆記</div>}
+
+    {modal&&<div className="modal-bg" onClick={e=>{if(e.target.classList.contains('modal-bg'))setModal(null)}}>
+      <div className="modal">
+        <h3>{modal.mode==='add'?'新增筆記':'編輯筆記'}</h3>
+        <div className="field"><label>標題</label><input value={editingNote.title} onChange={e=>setEditingNote(p=>({...p,title:e.target.value}))} placeholder="例：今日觀察"/></div>
+        <div className="field"><label>分類</label>
+          <select value={editingNote.cat} onChange={e=>setEditingNote(p=>({...p,cat:e.target.value}))}>
+            {['flow','select','entry','chipread','exit','special','other'].map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+          </select></div>
+        <div className="field"><label>內容</label><textarea value={editingNote.body} onChange={e=>setEditingNote(p=>({...p,body:e.target.value}))} placeholder="想到什麼都可以寫，支援換行"/></div>
+        <div className="modal-btns"><button className="btn" onClick={()=>setModal(null)}>取消</button><button className="btn btn-primary" onClick={saveNote}>儲存</button></div>
+      </div>
+    </div>}
+  </div>
+}
+
+// ── 財商知識 (Finance) ──
+function FinancePage(){
+  const tabs=[{id:'money',label:'💰 理財觀念'},{id:'tax',label:'🧾 稅務'},{id:'fire',label:'🔥 財務自由'}];
+  const [tab,setTab]=useState('money');
+  return <div className="wrap">
+    <div className="page-title">財商知識</div>
+    <div className="page-sub">理財觀念 × 稅務基礎 × 財務自由</div>
+    <div className="sub-nav" style={{marginBottom:'1.5rem'}}>
+      {tabs.map(t=><button key={t.id} className={`sub-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}
+    </div>
+    {tab==='money'&&<MoneySection/>}
+    {tab==='tax'&&<TaxSection/>}
+    {tab==='fire'&&<FireSection/>}
+  </div>
+}
+function MoneySection(){return <>
+  <Card><h3>複利：為什麼越早開始越好</h3><p>複利 = 賺到的利潤，也繼續幫你賺錢。就像滾雪球，雪球越大每滾一圈黏上的雪越多。</p>
+  <Formula>終值 = 本金 × (1 + 年報酬率)^年數</Formula>
+  <Hl>投入10萬，年報酬7%：<br/>第1年的利息：7,000元（感覺普通）<br/>第10年那一年：約 12,900元<br/>第20年那一年：約 25,400元<br/>第30年那一年：約 50,000元<br/><br/><strong>到第30年，光那一年的利息就超過當初本金的一半。</strong></Hl>
+  <p><strong>72法則</strong>：72 ÷ 年報酬率 = 翻倍所需年數。年報酬7%：72÷7≈10年翻倍</p></Card>
+  <div className="grid2">
+    <Card><h3>緊急備用金</h3><p>財務安全網的第一步，沒有它就不該去投資高風險資產。</p><Hl>建議：3~6個月生活費<br/>放在：活期存款、貨幣型基金（隨時可提領）</Hl><Warn>緊急備用金不是閒置資金，是保險。有了它才能安心做長期投資</Warn></Card>
+    <Card><h3>資產配置基礎</h3>
+    <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+      <thead><tr>{['資產','風險','預期報酬'].map(h=><th key={h} style={{background:'var(--cream)',padding:'6px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+      <tbody>{[['現金/定存','極低','1~2%'],['債券ETF','低','3~5%'],['股票ETF','中高','6~10%'],['個股','高','不確定']].map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j} style={{padding:'6px 10px',borderBottom:'1px solid var(--border)',fontSize:13}}>{c}</td>)}</tr>)}</tbody>
+    </table></Card>
+  </div>
+  <Card><h3>常見投資工具比較</h3>
+  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+    <thead><tr>{['工具','優點','缺點'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 12px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+    <tbody>{[['ETF（指數型）','分散風險、低費用','無法超越指數'],['主動型基金','專業操盤','費用高、多數跑輸指數'],['個股','可能超額報酬','集中風險、需大量研究'],['定期定額','紀律投資、平均成本','多頭市場報酬略低']].map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j} style={{padding:'8px 12px',borderBottom:'1px solid var(--border)'}}>{c}</td>)}</tr>)}</tbody>
+  </table>
+  <Ok>✅ 給初學者：先建緊急備用金 → 定期定額買台股或全球ETF（0050、VOO）→ 有更多知識再考慮個股</Ok></Card>
+</>}
+function TaxSection(){return <>
+  <Card><h3>先有全局概念</h3>
+  <Hl>買賣股票賺差價 → 目前免稅（資本利得稅暫停課徵）<br/>賣出股票時 → 自動扣證交稅（0.3%），不用管<br/>收到股利 → 要申報，可以選對自己有利的方式計算</Hl></Card>
+  <div className="grid2">
+    <Card><h3>① 證交稅</h3><p>賣出時自動扣除，不需申報。</p><Formula>股票：賣出 × 0.3%{'\n'}ETF：賣出 × 0.1%{'\n'}當沖：賣出 × 0.15%</Formula></Card>
+    <Card><h3>② 股利所得稅</h3><p>兩種方式可選：</p><Hl>合併計稅：納入綜合所得，再抵減8.5%（上限8萬）<br/>分開計稅：以28%單一稅率計算<br/><br/>稅率低於28%選合併，高稅率選分開</Hl></Card>
+  </div>
+  <Card><h3>合法節稅方法</h3>
+  <div className="grid2">
+    <Ok>✅ 善用8.5%抵稅：股利可抵減8.5%，低稅率者股利稅負可以很低甚至退稅</Ok>
+    <Ok>✅ 長期持有減少交易：每次買賣都有0.3%+手續費，交易越少成本越低</Ok>
+  </div></Card>
+</>}
+function FireSection(){return <>
+  <Card><h3>FIRE 是什麼？</h3><p>財務獨立、提早退休。核心想法：<strong>存夠多的錢，讓錢替你工作，你不需要為了錢而工作</strong>。</p>
+  <Hl>25倍法則：目標資產 = 每年生活費 × 25<br/><br/>月花3萬（年36萬）→ 目標 900萬<br/>月花5萬（年60萬）→ 目標 1,500萬<br/>月花8萬（年96萬）→ 目標 2,400萬</Hl>
+  <p style={{marginTop:10}}><strong>為什麼是25倍？</strong>因為 25 × 4% = 100%。每年只提領資產的4%，歷史數據顯示可以撐超過30年不用完。</p>
+  <Ok>✅ 用你現在的狀況想：轉職後月薪5萬，每月存1.5萬投入ETF（年報酬7%），20年後約900萬，接近月花3萬的FIRE目標。你現在學數據分析轉職，就是在做「提升收入」這件最重要的事。</Ok></Card>
+  <div className="grid2">
+    {[['🥗 Lean FIRE','極簡生活，目標約600~900萬'],['🏠 Regular FIRE','一般生活，目標1,200~2,000萬'],['💎 Fat FIRE','維持高品質，目標3,000萬以上'],['🏢 Barista FIRE','資產未達目標，靠兼職補足缺口']].map(([title,desc])=><Card key={title}><h3>{title}</h3><p style={{fontSize:14,color:'#4a4540'}}>{desc}</p></Card>)}
+  </div>
+</>}
+
+// ── 學習追蹤 (Tracker) ──
+function TrackerPage(){
+  const tabs=[{id:'goal',label:'🎯 轉職目標'},{id:'cert',label:'📜 證照規劃'},{id:'project',label:'🗂️ 專案'},{id:'skill',label:'⭐ 技能自評'},{id:'log',label:'📓 學習日誌'}];
+  const [tab,setTab]=useState('goal');
+  return <div className="wrap">
+    <div className="page-title">學習目標 & 進度</div>
+    <div className="page-sub">轉職倒數 · 證照規劃 · 專案里程碑</div>
+    <div className="sub-nav" style={{marginBottom:'1.5rem'}}>
+      {tabs.map(t=><button key={t.id} className={`sub-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}
+    </div>
+    {tab==='goal'&&<GoalTab/>}
+    {tab==='cert'&&<CertTab/>}
+    {tab==='project'&&<ProjectTab/>}
+    {tab==='skill'&&<SkillTab/>}
+    {tab==='log'&&<LogTab/>}
+  </div>
+}
+function GoalTab(){
+  const [goals,setGoals]=useState(()=>LS.get('da_goals')||{});
+  const [customGoals,setCustomGoals]=useState(()=>LS.get('da_custom_goals')||[]);
+  const [newGoal,setNewGoal]=useState('');
+  const toggle=(id)=>{const g={...goals,[id]:!goals[id]};setGoals(g);LS.set('da_goals',g)};
+  const addCustom=()=>{if(!newGoal.trim())return;const g=[{id:'cg'+Date.now(),text:newGoal,done:false},...customGoals];setCustomGoals(g);LS.set('da_custom_goals',g);setNewGoal('')};
+  const toggleCustom=(id)=>{const g=customGoals.map(x=>x.id===id?{...x,done:!x.done}:x);setCustomGoals(g);LS.set('da_custom_goals',g)};
+  const delCustom=(id)=>{const g=customGoals.filter(x=>x.id!==id);setCustomGoals(g);LS.set('da_custom_goals',g)};
+  const FIXED_GOALS=[{id:'direction',label:'確定轉職方向',sub:'數據分析師 × 客服背景',done:true},{id:'resume',label:'完成第一份作品集',sub:'Lab1 客服分析 → GitHub'},{id:'github',label:'GitHub 上架3個專案',sub:'轉職前完成'},{id:'interview',label:'投出第一份履歷',sub:'預計第7個月'},{id:'offer',label:'拿到 Offer',sub:'6–9個月目標'}];
+  const TIMELINE=[{label:'第1–2個月',desc:'SQL基礎 · Pandas重練 · Lab1完成',active:true},{label:'第2–4個月',desc:'EDA · 假設檢定 · 視覺化 · A/B測試'},{label:'第4–7個月',desc:'3個完整分析專案上GitHub'},{label:'第7–9個月',desc:'面試準備 · SQL練題 · 投履歷'}];
+  return <div className="grid2">
+    <div>
+      <Card><h3>核心目標</h3>
+      {FIXED_GOALS.map(g=><div key={g.id} className={`goal-item${g.done||goals[g.id]?' done':''}`}>
+        <span className={`goal-check${g.done||goals[g.id]?' done':''}`} style={{cursor:g.done?'default':'pointer'}} onClick={()=>!g.done&&toggle(g.id)}>{g.done||goals[g.id]?'✓':'○'}</span>
+        <div><div className="goal-title">{g.label}</div><div className="goal-sub">{g.sub}</div></div>
+      </div>)}</Card>
+      <Card><h3>自訂目標</h3>
+      {customGoals.map(g=><div key={g.id} className="custom-goal-item">
+        <span style={{cursor:'pointer',fontSize:16,color:g.done?'var(--green)':'var(--muted)'}} onClick={()=>toggleCustom(g.id)}>{g.done?'✓':'○'}</span>
+        <span style={{flex:1,textDecoration:g.done?'line-through':'none',color:g.done?'var(--muted)':'var(--ink)'}}>{g.text}</span>
+        <button className="icon-btn" onClick={()=>delCustom(g.id)}>✕</button>
+      </div>)}
+      <div style={{display:'flex',gap:8,marginTop:10}}>
+        <input style={{flex:1,padding:'8px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)'}} placeholder="新增自訂目標…" value={newGoal} onChange={e=>setNewGoal(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCustom()}/>
+        <button className="btn btn-primary" onClick={addCustom}>新增</button>
+      </div></Card>
+    </div>
+    <Card><h3>階段時程</h3>
+    {TIMELINE.map((t,i)=><div key={i} className="tl-row" style={{paddingBottom:i<TIMELINE.length-1?16:0}}>
+      <div className={`tl-dot${t.active?' active':''}`}/>
+      <div><div className="tl-title">{t.label}{t.active?' ← 你在這裡':''}</div><div className="tl-desc">{t.desc}</div></div>
+    </div>)}
+    <Hl style={{marginTop:12}}>你的優勢：統計底子 × 客服實務 × 數據分析。這個組合在市場上很少見，是你最大的差異化。</Hl></Card>
+  </div>
+}
+function CertTab(){
+  const [certs,setCerts]=useState(()=>LS.get('da_certs')||{});
+  const toggle=(id)=>{const c={...certs,[id]:!certs[id]};setCerts(c);LS.set('da_certs',c)};
+  const CERTS=[
+    {id:'google',priority:'high',badge:'⭐ 最推薦先考',name:'Google 數據分析專業證書',issuer:'Google × Coursera',why:'專為轉職設計，零基礎可考。涵蓋SQL、Python、Tableau、EDA，跟你的學習路線完全重疊。',meta:['⏱ 3–6個月','💰 Coursera訂閱制','🌐 英文有繁中字幕']},
+    {id:'powerbi',priority:'high',badge:'⭐ 台灣職場有效',name:'Microsoft Power BI DA',issuer:'Microsoft（PL-300）',why:'台灣企業用Power BI做Dashboard很普遍，履歷辨識度高。考試內容是實作，不需要寫程式。',meta:['⏱ 2–3個月','💰 考試費約NT$5,000','🌐 可選中文']},
+    {id:'azure',priority:'mid',badge:'🔵 快速入手',name:'Azure Data Fundamentals',issuer:'Microsoft（DP-900）',why:'難度低，一週可以準備。覆蓋SQL、資料倉儲、雲端基礎，快速在履歷上加一張雲端認證。',meta:['⏱ 1–2週','💰 約NT$2,200','🌐 可選中文']},
+    {id:'ibm',priority:'mid',badge:'🔵 進階推薦',name:'IBM 數據科學專業證書',issuer:'IBM × Coursera',why:'比Google證書更深，涵蓋機器學習基礎。建議Google考完、作品集有1–2個後再考。',meta:['⏱ 3–6個月','💰 Coursera訂閱制','🌐 英文']},
+    {id:'sql',priority:'low',badge:'⚪ 免費快考',name:'HackerRank SQL 認證',issuer:'HackerRank',why:'免費，通過後可以放到LinkedIn。適合在Google證書考之前先快速累積一張。',meta:['⏱ 1–2週','💰 免費','🌐 英文']},
+    {id:'cfa',priority:'low',badge:'⚪ 金融方向',name:'證券商業務員',issuer:'台灣證券業同業公會',why:'如果想往金融數據分析方向（券商、投信），這張是基本門票。內容包含證券法規、投資分析。',meta:['⏱ 1–2個月','💰 報名費約NT$800','🌐 中文']},
+  ];
+  return <>
+    <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}><strong>作品集比證照重要</strong>，但以下幾張在履歷上有加分效果。根據你的背景篩選：統計系 + 轉數據分析師。</div>
+    <div className="cert-grid">
+      {CERTS.map(cert=><div key={cert.id} className={`cert-card${cert.priority==='high'?' high':''}${certs[cert.id]?' acquired':''}`}>
+        <div className="cert-header">
+          <div><div className="cert-badge">{cert.badge}</div><div className="cert-name">{cert.name}</div><div className="cert-issuer">{cert.issuer}</div></div>
+          <button className={`cert-check-btn${certs[cert.id]?' acquired':''}`} onClick={()=>toggle(cert.id)}>{certs[cert.id]?'✅ 已取得':'待考'}</button>
+        </div>
+        <div className="cert-body">
+          <div style={{fontSize:12,fontWeight:600,color:'var(--blue)',marginBottom:6}}>為什麼考這個？</div>
+          <p>{cert.why}</p>
+          <div className="cert-meta">{cert.meta.map((m,i)=><span key={i}>{m}</span>)}</div>
+        </div>
+      </div>)}
+    </div>
+  </>
+}
+function ProjectTab(){
+  const [state,setState]=useState(()=>LS.get('da_projects')||{});
+  const save=(s)=>{setState(s);LS.set('da_projects',s)};
+  const togglePS=(id)=>{const s={...state,[id]:!state[id]};save(s)};
+  const setStatus=(pid,val)=>{const s={...state,[pid]:val};save(s)};
+  const PROJECTS=[
+    {id:'p1',title:'客服數據分析',desc:'用Lab1的200筆數據，找出影響滿意度的關鍵因素',steps:[{id:'p1s1',text:'EDA + 缺失值處理'},{id:'p1s2',text:'各渠道/問題類型的滿意度比較'},{id:'p1s3',text:'假設檢定驗證差異'},{id:'p1s4',text:'視覺化 + 結論報告'},{id:'p1s5',text:'上傳GitHub + 寫README'}]},
+    {id:'p2',title:'電商退貨率分析',desc:'用Lab2數據，找出退貨率高的原因並提出降低策略',steps:[{id:'p2s1',text:'各品類退貨率EDA'},{id:'p2s2',text:'配送時間與退貨率相關性'},{id:'p2s3',text:'顧客等級vs退貨行為'},{id:'p2s4',text:'結論：可降低退貨率的具體建議'},{id:'p2s5',text:'上傳GitHub'}]},
+    {id:'p3',title:'A/B測試完整報告',desc:'用Lab3數據，模擬一份完整的A/B測試分析報告',steps:[{id:'p3s1',text:'實驗設計說明（假設、指標、樣本數）'},{id:'p3s2',text:'統計檢定（t-test + Cohen\'s d）'},{id:'p3s3',text:'結果視覺化'},{id:'p3s4',text:'結論與業務建議'},{id:'p3s5',text:'上傳GitHub + 寫完整README'}]},
+  ];
+  const doneCount=PROJECTS.filter(p=>state[p.id]==='done').length;
+  return <>
+    <div style={{fontSize:13,color:'var(--muted)',marginBottom:14}}>三個專案就夠，重質不重量。每個專案要有「問題→分析→結論→建議」的完整敘事。<br/><strong>完成 {doneCount} / 3 個專案</strong></div>
+    {PROJECTS.map(proj=>{const status=state[proj.id]||'todo';return <div key={proj.id} className={`proj-card${status==='doing'?' doing':status==='done'?' done':''}`}>
+      <div className="proj-header">
+        <div className="proj-num">0{PROJECTS.indexOf(proj)+1}</div>
+        <div style={{flex:1}}><div className="proj-title">{proj.title}</div><div className="proj-desc">{proj.desc}</div></div>
+        <select className="proj-status" value={status} onChange={e=>setStatus(proj.id,e.target.value)}>
+          <option value="todo">🔲 未開始</option><option value="doing">🔄 進行中</option><option value="done">✅ 已完成</option>
+        </select>
+      </div>
+      <div className="proj-steps">{proj.steps.map(step=><div key={step.id} className={`ps-item${state[step.id]?' done':''}`}>
+        <span className="ps-check" style={{cursor:'pointer'}} onClick={()=>togglePS(step.id)}>{state[step.id]?'✓':'○'}</span>{step.text}
+      </div>)}</div>
+    </div>})}
+  </>
+}
+function SkillTab(){
+  const [ratings,setRatings]=useState(()=>LS.get('da_skills')||{});
+  const rate=(skill,val)=>{const r={...ratings,[skill]:val};setRatings(r);LS.set('da_skills',r)};
+  const SKILLS=[
+    {group:'基礎工具',items:[{id:'sql',name:'SQL'},{id:'python',name:'Python / Pandas'},{id:'excel',name:'Excel / Sheets'}]},
+    {group:'分析技能',items:[{id:'eda',name:'探索性分析 EDA'},{id:'stats',name:'假設檢定'},{id:'viz',name:'數據視覺化'},{id:'ab',name:'A/B 測試'}]},
+  ];
+  const total=Object.values(ratings).reduce((s,v)=>s+v,0);
+  const max=7*5;
+  return <>
+    <div className="prog-grid" style={{gridTemplateColumns:'repeat(2,1fr)'}}>
+      <div className="prog-card"><div className="prog-num">{Math.round(total/max*100)}%</div><div className="prog-label">整體完成度</div></div>
+      <div className="prog-card"><div className="prog-num">{Object.keys(ratings).filter(k=>ratings[k]>=3).length}/7</div><div className="prog-label">達到基礎水準</div></div>
+    </div>
+    {SKILLS.map(({group,items})=><div key={group}><div className="skill-group-title">{group}</div>
+    {items.map(({id,name})=><div key={id} className="skill-row">
+      <div className="skill-name">{name}</div>
+      <div className="stars">{[1,2,3,4,5].map(i=><span key={i} className={`star${(ratings[id]||0)>=i?' lit':''}`} onClick={()=>rate(id,i)}>★</span>)}</div>
+      <div className="skill-pct">{Math.round((ratings[id]||0)/5*100)}%</div>
+    </div>)}</div>)}
+  </>
+}
+function LogTab(){
+  const [logs,setLogs]=useState(()=>LS.get('da_logs')||[]);
+  const [input,setInput]=useState('');
+  const add=()=>{if(!input.trim())return;const now=new Date();const date=`${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;const l=[{id:'l'+Date.now(),text:input,date},...logs];setLogs(l);LS.set('da_logs',l);setInput('')};
+  const del=(id)=>{const l=logs.filter(x=>x.id!==id);setLogs(l);LS.set('da_logs',l)};
+  return <>
+    <div style={{display:'flex',gap:8,marginBottom:14}}>
+      <input style={{flex:1,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)'}} placeholder="今天學了什麼？有什麼突破或卡住的地方？" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&add()}/>
+      <button className="btn btn-primary" onClick={add}>記錄</button>
+    </div>
+    {logs.length===0&&<div style={{textAlign:'center',padding:'2rem',color:'var(--muted)',fontSize:14}}>還沒有學習記錄，開始記吧！</div>}
+    {logs.map(log=><div key={log.id} className="log-entry">
+      <div className="log-date">{log.date}</div>
+      <div style={{flex:1}}>{log.text}</div>
+      <span className="log-del" onClick={()=>del(log.id)}>×</span>
+    </div>)}
+  </>
+}
+
+// ═══════════════════════════════════════════
+// APP
+// ═══════════════════════════════════════════
+const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'策略筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
+
+function App(){
+  const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
+  const switchTab=(id)=>{setTab(id);LS.set('da_current_tab',id)};
+  return <>
+    <nav>
+      <div className="nav-brand"><span>DA</span> · 學習平台</div>
+      <div className="nav-tabs">
+        {TABS.map(t=><button key={t.id} className={`nav-tab${tab===t.id?' active':''}`} onClick={()=>switchTab(t.id)}>{t.label}</button>)}
+      </div>
+    </nav>
+    {tab==='learn'&&<LearnPage/>}
+    {tab==='stock'&&<StockPage/>}
+    {tab==='notes'&&<NotesPage/>}
+    {tab==='finance'&&<FinancePage/>}
+    {tab==='tracker'&&<TrackerPage/>}
+  </>
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
