@@ -200,6 +200,29 @@ nav{position:sticky;top:0;z-index:100;background:var(--ink);display:flex;align-i
 /* CUSTOM GOALS */
 .custom-goal-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
 .custom-goal-item:last-child{border-bottom:none}
+
+/* FLOATING NOTE */
+.float-btn{position:fixed;bottom:24px;right:24px;z-index:1000;width:50px;height:50px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.float-btn:hover{transform:scale(1.08)}
+.float-panel{position:fixed;bottom:86px;right:24px;z-index:1000;width:320px;background:var(--paper);border:1.5px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;flex-direction:column;max-height:72vh}
+.float-panel-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.float-panel-header span{font-size:13px;font-weight:500;flex:1}
+.float-panel-tabs{display:flex;gap:4px}
+.fp-tab{padding:3px 10px;border:1px solid var(--border);border-radius:5px;background:none;font-size:11px;cursor:pointer;color:var(--muted)}
+.fp-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.float-panel-body{padding:12px 14px;overflow-y:auto;flex:1}
+.fp-input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--card);color:var(--ink);margin-bottom:8px;box-sizing:border-box}
+.fp-input:focus{outline:none;border-color:var(--blue)}
+.fp-textarea{width:100%;min-height:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--card);color:var(--ink);resize:none;line-height:1.7;box-sizing:border-box}
+.fp-textarea:focus{outline:none;border-color:var(--blue)}
+.fp-save-btn{width:100%;margin-top:8px;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:var(--sans)}
+.fp-saved{font-size:11px;color:var(--green);text-align:center;margin-top:6px;height:14px}
+.fp-mini-note{padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.fp-mini-note:hover{border-color:var(--blue)}
+.fp-mini-title{font-size:12px;font-weight:500;margin-bottom:2px;color:var(--ink)}
+.fp-mini-body{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fp-mini-date{font-size:10px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+
 </style>
 </head>
 <body>
@@ -752,9 +775,8 @@ function BasicPage(){return <>
 </>}
 
 // ── 策略筆記 (Notes) ──
-function NotesPage(){
+function NotesPage({userNotes, onSave}){
   const [filter,setFilter]=useState('all');
-  const [userNotes,setUserNotes]=useState(()=>LS.get('da_user_notes')||[]);
   const [modal,setModal]=useState(null);
   const exportNotes=()=>{
     const data={userNotes,exportDate:new Date().toISOString()};
@@ -784,7 +806,7 @@ function NotesPage(){
   };
   const [editingNote,setEditingNote]=useState({title:'',cat:'other',body:''});
 
-  const save=(notes)=>{setUserNotes(notes);LS.set('da_user_notes',notes)};
+  const save=onSave;
   const openAdd=()=>{setEditingNote({title:'',cat:'other',body:''});setModal({mode:'add'})};
   const openEdit=(n)=>{setEditingNote({...n});setModal({mode:'edit',id:n.id})};
   const saveNote=()=>{
@@ -1063,6 +1085,73 @@ function LogTab(){
   </>
 }
 
+
+// ── Floating Note ──
+function FloatingNote({userNotes, onSave}){
+  const [open, setOpen] = React.useState(false);
+  const [tab, setTab] = React.useState('write');
+  const [title, setTitle] = React.useState('');
+  const [cat, setCat] = React.useState('other');
+  const [body, setBody] = React.useState('');
+  const [saved, setSaved] = React.useState('');
+  const [editId, setEditId] = React.useState(null);
+
+  const save = () => {
+    if(!body.trim()) return;
+    const now = new Date();
+    const date = now.getMonth()+1+'/'+now.getDate()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    if(editId){
+      onSave(userNotes.map(n=>n.id===editId?{...n,title,cat,body,date}:n));
+      setEditId(null);
+    } else {
+      onSave([{id:'u'+Date.now(),title,cat,body,date},...userNotes]);
+    }
+    setTitle(''); setBody(''); setSaved('✅ 已儲存');
+    setTimeout(()=>setSaved(''), 1600);
+  };
+
+  const openEdit = (n) => {
+    setTab('write');
+    setTitle(n.title||''); setCat(n.cat||'other'); setBody(n.body||'');
+    setEditId(n.id);
+  };
+
+  const recent = userNotes.slice(0,8);
+
+  return <>
+    <button className="float-btn" onClick={()=>setOpen(o=>!o)} title="快速記筆記">📝</button>
+    {open && <div className="float-panel">
+      <div className="float-panel-header">
+        <span>📝 快速筆記</span>
+        <div className="float-panel-tabs">
+          <button className={`fp-tab${tab==='write'?' active':''}`} onClick={()=>setTab('write')}>寫筆記</button>
+          <button className={`fp-tab${tab==='list'?' active':''}`} onClick={()=>{setTab('list')}}>最近</button>
+          <button className="fp-tab" onClick={()=>setOpen(false)}>✕</button>
+        </div>
+      </div>
+      <div className="float-panel-body">
+        {tab==='write' && <>
+          <input className="fp-input" placeholder="標題（選填，Enter 儲存）" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()}/>
+          <select className="fp-input" value={cat} onChange={e=>setCat(e.target.value)}>
+            {[['flow','選股流程'],['select','選股系統'],['entry','進場判斷'],['chipread','籌碼判讀'],['exit','出場規則'],['special','特殊操作'],['other','其他']].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+          </select>
+          <textarea className="fp-textarea" placeholder="想到什麼就寫，支援換行…" value={body} onChange={e=>setBody(e.target.value)}/>
+          <button className="fp-save-btn" onClick={save}>儲存筆記</button>
+          <div className="fp-saved">{saved}</div>
+        </>}
+        {tab==='list' && <>
+          {recent.length===0 && <div style={{textAlign:'center',padding:'1.5rem',color:'var(--muted)',fontSize:13}}>還沒有筆記</div>}
+          {recent.map(n=><div key={n.id} className="fp-mini-note" onClick={()=>openEdit(n)}>
+            <div className="fp-mini-title">{n.title||'（無標題）'}</div>
+            <div className="fp-mini-body">{n.body}</div>
+            <div className="fp-mini-date">{n.date}</div>
+          </div>)}
+        </>}
+      </div>
+    </div>}
+  </>
+}
+
 // ═══════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════
@@ -1070,6 +1159,8 @@ const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
+  const [userNotes,setUserNotes]=useState(()=>LS.get('da_user_notes')||[]);
+  const saveNotes=(notes)=>{setUserNotes(notes);LS.set('da_user_notes',notes)};
   const switchTab=(id)=>{setTab(id);LS.set('da_current_tab',id)};
   return <>
     <nav>
@@ -1080,9 +1171,10 @@ function App(){
     </nav>
     {tab==='learn'&&<LearnPage/>}
     {tab==='stock'&&<StockPage/>}
-    {tab==='notes'&&<NotesPage/>}
+    {tab==='notes'&&<NotesPage userNotes={userNotes} onSave={saveNotes}/>}
     {tab==='finance'&&<FinancePage/>}
     {tab==='tracker'&&<TrackerPage/>}
+    <FloatingNote userNotes={userNotes} onSave={saveNotes}/>
   </>
 }
 
