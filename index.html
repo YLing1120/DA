@@ -204,17 +204,18 @@ nav{position:sticky;top:0;z-index:100;background:var(--ink);display:flex;align-i
 /* FLOATING NOTE */
 .float-btn{position:fixed;bottom:24px;right:24px;z-index:1000;width:50px;height:50px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;transition:transform .2s}
 .float-btn:hover{transform:scale(1.08)}
-.float-panel{position:fixed;bottom:86px;right:24px;z-index:1000;width:320px;background:var(--paper);border:1.5px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;flex-direction:column;max-height:72vh}
+.float-panel{position:fixed;bottom:86px;right:24px;z-index:1000;width:420px;background:var(--paper);border:1.5px solid var(--border);border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.15);display:flex;flex-direction:column;max-height:80vh}
 .float-panel-header{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .float-panel-header span{font-size:13px;font-weight:500;flex:1}
 .float-panel-tabs{display:flex;gap:4px}
 .fp-tab{padding:3px 10px;border:1px solid var(--border);border-radius:5px;background:none;font-size:11px;cursor:pointer;color:var(--muted)}
 .fp-tab.active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.float-panel-body{padding:12px 14px;overflow-y:auto;flex:1}
-.fp-input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--card);color:var(--ink);margin-bottom:8px;box-sizing:border-box}
+.float-panel-body{padding:14px 16px;overflow-y:auto;flex:1}
+.fp-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--sans);background:var(--card);color:var(--ink);margin-bottom:8px;box-sizing:border-box}
 .fp-input:focus{outline:none;border-color:var(--blue)}
-.fp-textarea{width:100%;min-height:120px;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--card);color:var(--ink);resize:none;line-height:1.7;box-sizing:border-box}
+.fp-textarea{width:100%;min-height:240px;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--card);color:var(--ink);resize:none;line-height:1.7;box-sizing:border-box}
 .fp-textarea:focus{outline:none;border-color:var(--blue)}
+@media(max-width:500px){.float-panel{width:calc(100vw - 32px)}}
 .fp-save-btn{width:100%;margin-top:8px;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:var(--sans)}
 .fp-saved{font-size:11px;color:var(--green);text-align:center;margin-top:6px;height:14px}
 .fp-mini-note{padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
@@ -832,8 +833,8 @@ function NotesPage({userNotes, onSave}){
   fixedFiltered.forEach(n=>{if(!fixedGroups[n.cat])fixedGroups[n.cat]=[];fixedGroups[n.cat].push(n)});
 
   return <div className="wrap">
-    <div className="page-title">策略筆記</div>
-    <div className="page-sub">固定策略 + 自由補充，隨時記錄想法</div>
+    <div className="page-title">個人筆記</div>
+    <div className="page-sub">股票策略、學習心得、任何想記的都可以</div>
     <div className="filter-bar">
       {allCats.map(cat=><button key={cat} className={`filter-btn${filter===cat?' active':''}`} onClick={()=>setFilter(cat)}>{catLabels[cat]||cat}</button>)}
       <div style={{marginLeft:'auto',display:'flex',gap:6}}>
@@ -1155,7 +1156,7 @@ function FloatingNote({userNotes, onSave}){
 // ═══════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════
-const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'策略筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
+const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'個人筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
