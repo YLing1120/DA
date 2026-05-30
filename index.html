@@ -783,8 +783,9 @@ function NotesPage({userNotes, onSave}){
   // Merge strategy notes into userNotes on first load
   useEffect(()=>{
     const hasFixed = userNotes.some(n=>n.id&&n.id.startsWith('s'));
-    if(!hasFixed && userNotes.length===0){
-      onSave(STRATEGY_NOTES.map(n=>({...n})));
+    if(!hasFixed){
+      // 把策略筆記加到現有筆記前面
+      onSave([...STRATEGY_NOTES.map(n=>({...n})), ...userNotes]);
     }
   },[]);
   const exportNotes=()=>{
@@ -1171,7 +1172,20 @@ const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
-  const [userNotes,setUserNotes]=useState(()=>LS.get('da_user_notes')||[]);
+  const [userNotes,setUserNotes]=useState(()=>{
+    // 嘗試讀取所有可能的舊 key，合併去重
+    const keys=['da_user_notes','da_notes_v5','da_notes'];
+    let all=[];
+    keys.forEach(k=>{
+      try{
+        const d=JSON.parse(localStorage.getItem(k)||'[]');
+        if(Array.isArray(d)) all=[...all,...d];
+      }catch(e){}
+    });
+    // 去重（相同 id 只保留一筆）
+    const seen=new Set();
+    return all.filter(n=>{ if(seen.has(n.id)) return false; seen.add(n.id); return true; });
+  });
   const saveNotes=(notes)=>{setUserNotes(notes);LS.set('da_user_notes',notes)};
   const switchTab=(id)=>{setTab(id);LS.set('da_current_tab',id)};
   return <>
