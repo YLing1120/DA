@@ -235,23 +235,24 @@ const {useState,useEffect,useCallback,useRef}=React;
 // DATA
 // ═══════════════════════════════════════════
 const STRATEGY_NOTES=[
-  {id:'s1',cat:'flow',title:'選股到出場：完整流程',body:'① 篩選有機會的股票\n② 確認對的時間（大盤格局）\n③ 等盤中訊號（不急進場）\n④ 足夠資訊才判斷（技術面＋籌碼面 1+1）\n\n核心系統：葛蘭碧多空 ＋ 主力籌碼過濾'},
-  {id:'s2',cat:'flow',title:'盤中SOP操作流程',body:'早盤：確認大盤格局（外資期貨 vs 散戶小台）\n12:00：挑選個股名單\n12:30 後：才考慮進場\n\n盤後做功課：\n• 籌碼打勾（盤後警報器）\n• 三種篩選條件跑一遍'},
-  {id:'s3',cat:'chipread',title:'大盤格局判斷',body:'外資期貨＋ + 散戶小台－ → 多頭格局\n外資期貨－ + 散戶小台＋ → 空頭格局\n符號相同 → 震盪\n\n短期三指標：\n雙綠一紅 → 偏空\n雙紅一綠 → 偏多\n交雜 → 調節格局'},
-  {id:'s4',cat:'select',title:'追漲六心法',body:'1. 集中：籌碼集中在特定人手上\n2. 糾結：5/10/20均線糾結，60不遠\n3. 壓縮：價穩量縮（全紅最好）\n4. 突破：長紅K突破切線/頸線/前高\n5. 帶量：突破帶量，非詭異大量\n6. 實紅：上影線不超過1/2\n\n初學版：突破＋四季五燈獎'},
-  {id:'s5',cat:'select',title:'盤後三種篩選法',body:'① 突破型\n突破＋三個籌碼（周線圖看壓力）\n\n② 平穩突破型\n突破平穩期＋法人大買超＋月營收成長\n→ 投信排序，土洋合作\n\n③ 多排回檔型\n多頭排列回檔＋法人買超\n→ 投信排序，找跌的\n\n隔日注意：\n長紅隔日不追高 / 跌破算失敗\n買點一：量縮回收側下影\n買點二：整理再次過前高'},
-  {id:'s6',cat:'entry',title:'技籌邏輯：準創高選股',body:'準創高 = 頂上無壓（無解套賣壓）\n\n兩種情境：\n1. 尚未創高、準備創高\n2. 創高不久、賣壓尚未出籠\n\n最強組合：\n籌碼五燈獎 ＋ 月營收成長 ＋ K棒在長均線之上'},
-  {id:'s7',cat:'entry',title:'切線畫法',body:'1. 連接兩個高點（須含影線）\n2. 中間不能有K棒穿越\n3. 其中一個高點可延伸至最低點\n\n突破切線 = 賣壓結束訊號'},
-  {id:'s8',cat:'entry',title:'仙人指路',body:'1. 突破盤整（不能突破太多）\n2. 上影線長\n3. 量增（非爆大量）\n4. 出現在過去壓力區間\n\n使用時機：\n葛蘭碧訊號少 / 晚上做功課 / 股票漲多'},
-  {id:'s9',cat:'entry',title:'大盤回檔的買點',body:'支撐種類（必須是上揚均線）：\n頸線、缺口、趨勢線、前波高點\n\n雙重支撐 = 符合兩個以上\n確認訊號 = 長下影線或短紅K\n\n多頭兩種買法：突破買、回檔買'},
-  {id:'s10',cat:'chipread',title:'六心法籌碼深解',body:'集中的本質：主力在盤整/盤跌段吸貨\n糾結的本質：避免追高/末升段\n壓縮的本質：價格波動小，籌碼安定\n\n六心法適用時機：盤整段或盤跌段'},
-  {id:'s11',cat:'exit',title:'出場三種方法',body:'① 移動停利\n每次創高後設回檔%數，不斷往上移\n\n② 關鍵K棒停利\n帶量長紅、跳空紅K = 關鍵K棒\n跌破 = 警示，再次跌破 = 出場\n\n③ 達標出場法\n絕對達標 → 重視停利\n時間達標 → 當沖/隔日衝\n空間達標 → 下壓季線是壓力'},
+  {id:'s1',cat:'strategy',title:'選股到出場：完整流程',body:'① 篩選有機會的股票\n② 確認對的時間（大盤格局）\n③ 等盤中訊號（不急進場）\n④ 足夠資訊才判斷（技術面＋籌碼面 1+1）\n\n核心系統：葛蘭碧多空 ＋ 主力籌碼過濾'},
+  {id:'s4',cat:'strategy',title:'追漲六心法',body:'1. 集中：籌碼集中在特定人手上\n2. 糾結：5/10/20均線糾結，60不遠\n3. 壓縮：價穩量縮（全紅最好）\n4. 突破：長紅K突破切線/頸線/前高\n5. 帶量：突破帶量，非詭異大量\n6. 實紅：上影線不超過1/2\n\n初學版：突破＋四季五燈獎'},
+  {id:'s5',cat:'strategy',title:'盤後三種篩選法',body:'① 突破型\n突破＋三個籌碼（周線圖看壓力）\n\n② 平穩突破型\n突破平穩期＋法人大買超＋月營收成長\n→ 投信排序，土洋合作\n\n③ 多排回檔型\n多頭排列回檔＋法人買超\n→ 投信排序，找跌的\n\n隔日注意：\n長紅隔日不追高 / 跌破算失敗\n買點一：量縮回收側下影\n買點二：整理再次過前高'},
+  {id:'s6',cat:'strategy',title:'技籌邏輯：準創高選股',body:'準創高 = 頂上無壓（無解套賣壓）\n\n兩種情境：\n1. 尚未創高、準備創高\n2. 創高不久、賣壓尚未出籠\n\n最強組合：\n籌碼五燈獎 ＋ 月營收成長 ＋ K棒在長均線之上'},
+  {id:'s7',cat:'strategy',title:'切線畫法',body:'1. 連接兩個高點（須含影線）\n2. 中間不能有K棒穿越\n3. 其中一個高點可延伸至最低點\n\n突破切線 = 賣壓結束訊號'},
+  {id:'s8',cat:'strategy',title:'仙人指路',body:'1. 突破盤整（不能突破太多）\n2. 上影線長\n3. 量增（非爆大量）\n4. 出現在過去壓力區間\n\n使用時機：\n葛蘭碧訊號少 / 晚上做功課 / 股票漲多'},
+  {id:'s9',cat:'strategy',title:'大盤回檔的買點',body:'支撐種類（必須是上揚均線）：\n頸線、缺口、趨勢線、前波高點\n\n雙重支撐 = 符合兩個以上\n確認訊號 = 長下影線或短紅K\n\n多頭兩種買法：突破買、回檔買'},
+  {id:'s14',cat:'strategy',title:'新手養成班：雙線一型選股法',body:'均線認識：\n• 定義：一段時間收盤價平均\n• 均線糾結 → 找股價整理的股票\n• 參數：預設即可\n• 至少3線糾結（含季線靠攏）\n• 突破進場：K棒不要離5日線太遠\n• 均線須向上或平\n\n劃線原因：\n• 確認趨勢轉折（多空）\n• 確認突破壓力 / 跌破支撐\n\n三種切線：\n• 下降趨勢線：空方壓力線，突破 → 空轉多\n• 上升趨勢線：多方支撐線，跌破 → 多轉空\n• 橫向平切：橫盤整理突破\n  多點觸碰才確實形成壓力\n\n橫向切線尋找條件：\n1. 過去一個月以上橫盤整理\n2. 成交量大的K棒高點，目前價格須突破\n3. 盤整價格幅度不要過大\n4. 觸碰越多點越具意義\n\n雙線一型總結：\n1. K棒在所有均線之上\n2. 三線糾結，季線靠攏\n3. 突破前高或橫切線\n4. 橫向整理區間狹窄\n\n停利：雙向移動停利法\n1. 設定%數（3~10%）\n2. 到達%數出部分\n3. 買入後最高價回跌此%數全出'},
+  {id:'s2',cat:'operation',title:'盤中SOP操作流程',body:'早盤：確認大盤格局（外資期貨 vs 散戶小台）\n12:00：挑選個股名單\n12:30 後：才考慮進場\n\n盤後做功課：\n• 籌碼打勾（盤後警報器）\n• 三種篩選條件跑一遍'},
+  {id:'s3',cat:'operation',title:'大盤格局判斷',body:'外資期貨＋ + 散戶小台－ → 多頭格局\n外資期貨－ + 散戶小台＋ → 空頭格局\n符號相同 → 震盪\n\n短期三指標：\n雙綠一紅 → 偏空\n雙紅一綠 → 偏多\n交雜 → 調節格局'},
+  {id:'s10',cat:'operation',title:'六心法籌碼深解',body:'集中的本質：主力在盤整/盤跌段吸貨\n糾結的本質：避免追高/末升段\n壓縮的本質：價格波動小，籌碼安定\n\n六心法適用時機：盤整段或盤跌段'},
+  {id:'s11',cat:'operation',title:'出場三種方法',body:'① 移動停利\n每次創高後設回檔%數，不斷往上移\n\n② 關鍵K棒停利\n帶量長紅、跳空紅K = 關鍵K棒\n跌破 = 警示，再次跌破 = 出場\n\n③ 達標出場法\n絕對達標 → 重視停利\n時間達標 → 當沖/隔日衝\n空間達標 → 下壓季線是壓力'},
   {id:'s12',cat:'special',title:'除權息操作法',body:'工具：股期、權證（除息當天即領利）\n\n步驟：\n1. 監控：勾選股期、權證\n2. 特殊事件：勾選除權息\n3. 籌碼面：勾選（必要）\n4. 除權日、除息日打勾'},
   {id:'s13',cat:'special',title:'處置股注意',body:'三天第一款：漲跌幅過大被關注\n連續5天注意股：持續異常\n\n操作：進入處置後 → 拉回找買點\n⚠️ 流動性差、買賣價差大'},
 ];
 
-const CAT_LABELS={flow:'選股流程',select:'選股系統',entry:'進場判斷',chipread:'籌碼判讀',exit:'出場規則',special:'特殊操作',other:'其他',tech:'技術面',chip:'籌碼面',fund:'基本面',finance:'財商'};
-const CAT_CLASS={flow:'cat-flow',select:'cat-select',entry:'cat-entry',chipread:'cat-chipread',exit:'cat-exit',special:'cat-special',other:'cat-other',tech:'cat-flow',chip:'cat-chipread',finance:'cat-entry'};
+const CAT_LABELS={strategy:'📋 選股策略',operation:'📊 盤中盤後操作',special:'⚡ 特殊事件',other:'其他'};
+const CAT_CLASS={strategy:'cat-flow',operation:'cat-chipread',special:'cat-entry',other:'cat-other'};
 
 // ═══════════════════════════════════════════
 // STORAGE UTILS
@@ -823,8 +824,9 @@ function NotesPage({userNotes, onSave}){
   };
   const del=(id)=>{if(confirm('確定刪除？'))save(userNotes.filter(n=>n.id!==id))};
 
-  const allCats=['all','flow','select','entry','chipread','exit','special','other'];
+  const allCats=['all','strategy','operation','special','other'];
   const catLabels={all:'全部',...CAT_LABELS};
+
   const fixedFiltered=filter==='all'?STRATEGY_NOTES:STRATEGY_NOTES.filter(n=>n.cat===filter);
   const userFiltered=filter==='all'?userNotes:userNotes.filter(n=>n.cat===filter);
 
@@ -870,7 +872,7 @@ function NotesPage({userNotes, onSave}){
         <div className="field"><label>標題</label><input value={editingNote.title} onChange={e=>setEditingNote(p=>({...p,title:e.target.value}))} placeholder="例：今日觀察"/></div>
         <div className="field"><label>分類</label>
           <select value={editingNote.cat} onChange={e=>setEditingNote(p=>({...p,cat:e.target.value}))}>
-            {['flow','select','entry','chipread','exit','special','other'].map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+            {['strategy','operation','special','other'].map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
           </select></div>
         <div className="field"><label>內容</label><textarea value={editingNote.body} onChange={e=>setEditingNote(p=>({...p,body:e.target.value}))} placeholder="想到什麼都可以寫，支援換行"/></div>
         <div className="modal-btns"><button className="btn" onClick={()=>setModal(null)}>取消</button><button className="btn btn-primary" onClick={saveNote}>儲存</button></div>
@@ -1143,7 +1145,7 @@ function FloatingNote({userNotes, onSave}){
         {tab==='write' && <>
           <input style={inputStyle} placeholder="標題（選填，Enter 儲存）" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()}/>
           <select style={inputStyle} value={cat} onChange={e=>setCat(e.target.value)}>
-            {[['flow','選股流程'],['select','選股系統'],['entry','進場判斷'],['chipread','籌碼判讀'],['exit','出場規則'],['special','特殊操作'],['other','其他']].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+            {[['strategy','📋 選股策略'],['operation','📊 盤中盤後操作'],['special','⚡ 特殊事件'],['other','其他']].map(([v,l])=><option key={v} value={v}>{l}</option>)}
           </select>
           <textarea style={taStyle} placeholder="想到什麼就寫，支援換行…" value={body} onChange={e=>setBody(e.target.value)}/>
           <button style={saveBtnStyle} onClick={save}>儲存筆記</button>
