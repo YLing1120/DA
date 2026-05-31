@@ -807,7 +807,8 @@ function NotesPage({userNotes, onSave}){
         const imported=data.userNotes||[];
         if(!Array.isArray(imported))throw new Error();
         if(!confirm('匯入 '+imported.length+' 則筆記？（會合併到現有筆記）'))return;
-        const merged=[...imported,...userNotes.filter(n=>!imported.find(i=>i.id===n.id))];
+        // 用標題+內容判斷重複，避免不同電腦 id 不同但內容相同的問題
+        const merged=[...imported,...userNotes.filter(n=>!imported.find(i=>i.title===n.title&&i.body===n.body))];
         save(merged);
         alert('✅ 匯入成功！');
       }catch{alert('❌ 檔案格式錯誤');}
