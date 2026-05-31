@@ -1214,7 +1214,7 @@ print('✅ 差異顯著' if p < 0.05 else '❌ 差異不顯著')`
     cols:['session_id','group','agent_exp','issue_type','satisfaction','call_duration'],
     filename:'ab_test_results.csv',
     gen:genLab3,
-    tasks:['確認 control 和 treatment 各有多少筆','計算兩組的平均滿意度和標準差','用 t-test 檢定兩組差異是否顯著','計算 Cohen's d 效果量','計算所需樣本數（用 statsmodels）','寫出完整的 A/B 測試結論報告'],
+    tasks:["確認 control 和 treatment 各有多少筆","計算兩組的平均滿意度和標準差","用 t-test 檢定兩組差異是否顯著","計算 Cohen's d 效果量","計算所需樣本數（用 statsmodels）","寫出完整的 A/B 測試結論報告"],
     code:`import pandas as pd
 import numpy as np
 from scipy import stats
