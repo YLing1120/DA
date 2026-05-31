@@ -242,6 +242,7 @@ const STRATEGY_NOTES=[
   {id:'s7',cat:'strategy',title:'切線畫法',body:'1. 連接兩個高點（須含影線）\n2. 中間不能有K棒穿越\n3. 其中一個高點可延伸至最低點\n\n突破切線 = 賣壓結束訊號'},
   {id:'s8',cat:'strategy',title:'仙人指路',body:'1. 突破盤整（不能突破太多）\n2. 上影線長\n3. 量增（非爆大量）\n4. 出現在過去壓力區間\n\n使用時機：\n葛蘭碧訊號少 / 晚上做功課 / 股票漲多'},
   {id:'s9',cat:'strategy',title:'大盤回檔的買點',body:'支撐種類（必須是上揚均線）：\n頸線、缺口、趨勢線、前波高點\n\n雙重支撐 = 符合兩個以上\n確認訊號 = 長下影線或短紅K\n\n多頭兩種買法：突破買、回檔買'},
+    {id:'s15',cat:'strategy',title:'進階應用特訓班',body:'均線壓縮 0~6\n越大越壓縮\n\n趨勢強度 1~4\n突破＋趨勢強度低＝破切\n\n準當日高低\n準當日高→走勢圖的準創高\n\n過一高 當沖'},
   {id:'s14',cat:'strategy',title:'新手養成班：雙線一型選股法',body:'均線認識：\n• 定義：一段時間收盤價平均\n• 均線糾結 → 找股價整理的股票\n• 參數：預設即可\n• 至少3線糾結（含季線靠攏）\n• 突破進場：K棒不要離5日線太遠\n• 均線須向上或平\n\n劃線原因：\n• 確認趨勢轉折（多空）\n• 確認突破壓力 / 跌破支撐\n\n三種切線：\n• 下降趨勢線：空方壓力線，突破 → 空轉多\n• 上升趨勢線：多方支撐線，跌破 → 多轉空\n• 橫向平切：橫盤整理突破\n  多點觸碰才確實形成壓力\n\n橫向切線尋找條件：\n1. 過去一個月以上橫盤整理\n2. 成交量大的K棒高點，目前價格須突破\n3. 盤整價格幅度不要過大\n4. 觸碰越多點越具意義\n\n雙線一型總結：\n1. K棒在所有均線之上\n2. 三線糾結，季線靠攏\n3. 突破前高或橫切線\n4. 橫向整理區間狹窄\n\n停利：雙向移動停利法\n1. 設定%數（3~10%）\n2. 到達%數出部分\n3. 買入後最高價回跌此%數全出'},
   {id:'s2',cat:'operation',title:'盤中SOP操作流程',body:'早盤：確認大盤格局（外資期貨 vs 散戶小台）\n12:00：挑選個股名單\n12:30 後：才考慮進場\n\n盤後做功課：\n• 籌碼打勾（盤後警報器）\n• 三種篩選條件跑一遍'},
   {id:'s3',cat:'operation',title:'大盤格局判斷',body:'外資期貨＋ + 散戶小台－ → 多頭格局\n外資期貨－ + 散戶小台＋ → 空頭格局\n符號相同 → 震盪\n\n短期三指標：\n雙綠一紅 → 偏空\n雙紅一綠 → 偏多\n交雜 → 調節格局'},
@@ -1090,6 +1091,208 @@ function LogTab(){
 }
 
 
+
+// ── Lab Page ──
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const RC=arr=>arr[Math.floor(Math.random()*arr.length)];
+function genLab1(){
+  const issueTypes=['帳號問題','退款申請','產品瑕疵','配送延遲','操作疑問'];
+  const channels=['電話','聊天室','Email','社群媒體'];
+  const weekdays=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const data=[];
+  for(let i=0;i<200;i++){
+    const issue=RC(issueTypes),ch=RC(channels);
+    const isRefund=issue==='退款申請';
+    const resolved=isRefund?Math.random()<0.58:Math.random()<0.85;
+    const baseTime=isRefund?42:issue==='產品瑕疵'?35:issue==='配送延遲'?28:18;
+    const time=Math.max(5,Math.round(baseTime+(Math.random()-0.3)*25));
+    const baseSat=ch==='電話'?4.1:ch==='聊天室'?3.5:ch==='社群媒體'?3.2:3.0;
+    const sat=Math.min(5,Math.max(1,Math.round((baseSat+(isRefund?-0.8:issue==='產品瑕疵'?-0.5:0)+(Math.random()-0.5)*1.2)*10)/10));
+    const m=R(1,6),d=R(1,28);
+    data.push({ticket_id:`TK-${1000+i}`,date:`2024-0${m}-${d<10?'0'+d:d}`,weekday:RC(weekdays),issue_type:issue,channel:ch,resolution_time:time,satisfaction:Math.round(sat),resolved:resolved?1:0,agent_exp:R(1,8)});
+  }
+  return data;
+}
+function genLab2(){
+  const categories=['3C電子','家電','服飾','食品','美妝','運動'];
+  const tiers=['新客','銅卡','銀卡','金卡'];
+  const baseAmt={'3C電子':8000,'家電':12000,'服飾':2500,'食品':800,'美妝':3000,'運動':4000};
+  const returnRate={'3C電子':0.22,'家電':0.08,'服飾':0.18,'食品':0.03,'美妝':0.12,'運動':0.09};
+  const tierMult={新客:1,銅卡:1.5,銀卡:2.2,金卡:3.5};
+  const data=[];
+  for(let i=0;i<150;i++){
+    const cat=RC(categories),tier=RC(tiers);
+    const returned=Math.random()<returnRate[cat]?1:0;
+    const m=R(1,6),d=R(1,28);
+    data.push({order_id:`ORD-${2000+i}`,date:`2024-0${m}-${d<10?'0'+d:d}`,category:cat,amount:Math.round(baseAmt[cat]*tierMult[tier]*(0.7+Math.random()*0.8)),customer_tier:tier,returned,rating:Math.min(5,Math.max(1,Math.round((returned?2.5:3.8)+(Math.random()-0.5)*1.5))),delivery_days:returned?R(6,14):R(2,6)});
+  }
+  return data;
+}
+function genLab3(){
+  const issueTypes=['帳號問題','退款申請','產品瑕疵','配送延遲','操作疑問'];
+  const data=[];
+  for(let i=0;i<200;i++){
+    const group=i<100?'control':'treatment';
+    const baseSat=group==='control'?3.6:4.0;
+    data.push({session_id:`S-${3000+i}`,group,agent_exp:R(1,8),issue_type:RC(issueTypes),satisfaction:Math.min(5,Math.max(1,Math.round((baseSat+(Math.random()-0.5)*1.4)*10)/10)),call_duration:R(5,45)});
+  }
+  return data;
+}
+
+function downloadCSV(data, cols, filename){
+  const csv=cols.join(',')+'\n'+data.map(r=>cols.map(c=>r[c]).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('\uFEFF'+csv);
+  a.download=filename; a.click();
+}
+
+const LABS=[
+  {
+    id:'lab1', title:'Lab 1：客服數據分析', badge:'⭐ 最推薦先做',
+    desc:'200 筆客服票券數據，分析影響滿意度的關鍵因素。這份數據跟你的客服背景直接相關，是最好的第一個作品集。',
+    cols:['ticket_id','date','weekday','issue_type','channel','resolution_time','satisfaction','resolved','agent_exp'],
+    filename:'customer_service.csv',
+    gen:genLab1,
+    tasks:['把 CSV 複製到 Google Colab，用 df.info() 確認欄位型態','用 df.describe() 找出 resolution_time 的最大值、平均值、中位數','用 df.isnull().sum() 確認有無缺失值','計算各 issue_type 的票券數量，找出最多的類型','計算各 channel 的平均 satisfaction，找出最高和最低的渠道','找出 resolved=1 和 resolved=0 的平均 resolution_time 差距','用視覺化畫出各 issue_type 的平均滿意度長條圖'],
+    code:`import pandas as pd
+import matplotlib.pyplot as plt
+
+# 載入數據
+df = pd.read_csv('customer_service.csv')
+
+# 基本認識
+print(df.shape)
+print(df.info())
+print(df.describe())
+print(df.isnull().sum())
+
+# 各問題類型統計
+issue_stats = df.groupby('issue_type').agg(
+    count=('ticket_id', 'count'),
+    avg_resolution=('resolution_time', 'mean'),
+    avg_satisfaction=('satisfaction', 'mean'),
+    resolve_rate=('resolved', 'mean')
+).round(2).reset_index()
+print(issue_stats)
+
+# 各渠道平均滿意度
+ch_sat = df.groupby('channel')['satisfaction'].mean().sort_values()
+ch_sat.plot(kind='barh', color='steelblue', figsize=(8,4))
+plt.title('各渠道平均滿意度')
+plt.tight_layout(); plt.show()`
+  },
+  {
+    id:'lab2', title:'Lab 2：電商訂單分析', badge:'🔵 中階',
+    desc:'150 筆電商訂單數據，分析退貨率和影響因素，提出降低退貨的建議。',
+    cols:['order_id','date','category','amount','customer_tier','returned','rating','delivery_days'],
+    filename:'ecommerce_orders.csv',
+    gen:genLab2,
+    tasks:['計算各品類的退貨率（returned 欄位的平均值）','分析配送時間與退貨率的關係','比較不同 customer_tier 的退貨行為差異','找出哪個品類退貨率最高，找出原因','用假設檢定驗證退貨 vs 未退貨的配送時間差異'],
+    code:`import pandas as pd
+from scipy import stats
+
+df = pd.read_csv('ecommerce_orders.csv')
+
+# 各品類退貨率
+return_rate = df.groupby('category')['returned'].mean().sort_values(ascending=False)
+print(return_rate)
+
+# 退貨 vs 未退貨的配送時間
+returned = df[df['returned']==1]['delivery_days']
+not_returned = df[df['returned']==0]['delivery_days']
+print(f'退貨平均配送天數：{returned.mean():.1f}')
+print(f'未退貨平均配送天數：{not_returned.mean():.1f}')
+
+# 假設檢定
+t, p = stats.ttest_ind(returned, not_returned)
+print(f't={t:.3f}, p={p:.4f}')
+print('✅ 差異顯著' if p < 0.05 else '❌ 差異不顯著')`
+  },
+  {
+    id:'lab3', title:'Lab 3：A/B 測試實戰', badge:'🔴 進階',
+    desc:'200 筆 A/B 測試數據（control vs treatment），模擬一份完整的 A/B 測試分析報告。',
+    cols:['session_id','group','agent_exp','issue_type','satisfaction','call_duration'],
+    filename:'ab_test_results.csv',
+    gen:genLab3,
+    tasks:['確認 control 和 treatment 各有多少筆','計算兩組的平均滿意度和標準差','用 t-test 檢定兩組差異是否顯著','計算 Cohen's d 效果量','計算所需樣本數（用 statsmodels）','寫出完整的 A/B 測試結論報告'],
+    code:`import pandas as pd
+import numpy as np
+from scipy import stats
+
+df = pd.read_csv('ab_test_results.csv')
+
+ctrl = df[df['group']=='control']['satisfaction']
+trt  = df[df['group']=='treatment']['satisfaction']
+
+print(f'控制組：n={len(ctrl)}, mean={ctrl.mean():.3f}, std={ctrl.std():.3f}')
+print(f'實驗組：n={len(trt)},  mean={trt.mean():.3f}, std={trt.std():.3f}')
+
+t, p = stats.ttest_ind(ctrl, trt)
+print(f'\nt={t:.3f}, p={p:.4f}')
+print('✅ 統計顯著' if p < 0.05 else '❌ 未達顯著')
+
+d = (trt.mean()-ctrl.mean()) / np.sqrt((ctrl.std()**2+trt.std()**2)/2)
+size = '小' if abs(d)<0.2 else ('中' if abs(d)<0.8 else '大')
+print(f"Cohen's d = {d:.3f}（{size}效果量）")`
+  },
+];
+
+function LabPage(){
+  const [activeLab,setActiveLab]=useState('lab1');
+  const lab=LABS.find(l=>l.id===activeLab);
+  const [showCode,setShowCode]=useState(false);
+  const [data]=useState(()=>({lab1:genLab1(),lab2:genLab2(),lab3:genLab3()}));
+
+  const handleDownload=()=>{
+    const d=data[activeLab];
+    downloadCSV(d, lab.cols, lab.filename);
+  };
+
+  return <div className="wrap">
+    <div className="page-title">實作 Lab</div>
+    <div className="page-sub">下載 CSV → 貼進 Google Colab → 跑程式碼</div>
+    <div className="sub-nav" style={{marginBottom:'1.5rem'}}>
+      {LABS.map(l=><button key={l.id} className={`sub-btn${activeLab===l.id?' active':''}`} onClick={()=>{setActiveLab(l.id);setShowCode(false)}}>{l.title.split('：')[0]}</button>)}
+    </div>
+    <Card>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+        <div>
+          <div style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--muted)',marginBottom:4}}>{lab.badge}</div>
+          <h3 style={{marginBottom:8}}>{lab.title}</h3>
+          <p>{lab.desc}</p>
+        </div>
+        <button onClick={handleDownload} style={{padding:'10px 20px',background:'var(--blue)',color:'#fff',border:'none',borderRadius:8,fontSize:14,cursor:'pointer',whiteSpace:'nowrap',flexShrink:0}}>⬇ 下載 CSV</button>
+      </div>
+    </Card>
+    <SectionLabel>分析任務</SectionLabel>
+    <Card>
+      {lab.tasks.map((t,i)=><div key={i} style={{display:'flex',gap:10,padding:'8px 0',borderBottom:i<lab.tasks.length-1?'1px solid var(--border)':'none',fontSize:14,color:'#4a4540'}}>
+        <span style={{color:'var(--blue)',fontFamily:'var(--mono)',fontSize:12,flexShrink:0,marginTop:2}}>{String(i+1).padStart(2,'0')}</span>
+        {t}
+      </div>)}
+    </Card>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10,marginTop:'1.2rem'}}>
+      <div className="section-label" style={{flex:1,marginBottom:0}}>程式碼範本</div>
+      <button onClick={()=>setShowCode(s=>!s)} style={{padding:'5px 14px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:12,background:'none',color:'var(--muted)',cursor:'pointer'}}>{showCode?'收起':'展開'}</button>
+    </div>
+    {showCode&&<Card>
+      <div style={{background:'#f8f6f1',border:'1px solid var(--border)',borderRadius:8,padding:'14px 18px',overflowX:'auto'}}>
+        <pre style={{fontFamily:'var(--mono)',fontSize:13,lineHeight:1.8,color:'#2a2520',margin:0}}>{lab.code}</pre>
+      </div>
+    </Card>}
+    <div style={{marginTop:'1.2rem'}}>
+      <SectionLabel>數據預覽（前5筆）</SectionLabel>
+      <Card style={{overflowX:'auto'}}>
+        <table style={{width:'100%',borderCollapse:'collapse',fontSize:12,fontFamily:'var(--mono)'}}>
+          <thead><tr>{lab.cols.map(col=><th key={col} style={{background:'var(--cream)',padding:'6px 10px',textAlign:'left',fontWeight:500,color:'var(--muted)',whiteSpace:'nowrap'}}>{col}</th>)}</tr></thead>
+          <tbody>{data[activeLab].slice(0,5).map((row,i)=><tr key={i}>{lab.cols.map(col=><td key={col} style={{padding:'6px 10px',borderBottom:'1px solid var(--border)',whiteSpace:'nowrap'}}>{row[col]}</td>)}</tr>)}</tbody>
+        </table>
+        <div style={{fontSize:11,color:'var(--muted)',marginTop:8,fontFamily:'var(--mono)'}}>顯示前5筆 · 共 {data[activeLab].length} 筆</div>
+      </Card>
+    </div>
+  </div>
+}
+
 // ── Floating Note ──
 function FloatingNote({userNotes, onSave}){
   const [open, setOpen] = React.useState(false);
@@ -1168,7 +1371,7 @@ function FloatingNote({userNotes, onSave}){
 // ═══════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════
-const TABS=[{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'個人筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
+const TABS=[{id:'lab',label:'實作 Lab'},{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'個人筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
@@ -1195,6 +1398,7 @@ function App(){
         {TABS.map(t=><button key={t.id} className={`nav-tab${tab===t.id?' active':''}`} onClick={()=>switchTab(t.id)}>{t.label}</button>)}
       </div>
     </nav>
+    {tab==='lab'&&<LabPage/>}
     {tab==='learn'&&<LearnPage/>}
     {tab==='stock'&&<StockPage/>}
     {tab==='notes'&&<NotesPage userNotes={userNotes} onSave={saveNotes}/>}
