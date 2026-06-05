@@ -1093,6 +1093,367 @@ function LogTab(){
 
 
 
+
+// ══════════════════════════════════════════
+// MIND MAP PAGE
+// ══════════════════════════════════════════
+
+const MIND_DATA = {
+  id:'root', label:'我的知識地圖', children:[
+    {
+      id:'stock', label:'📈 股票操作', children:[
+        {
+          id:'stock-select', label:'🔍 選股', children:[
+            {
+              id:'stock-select-tech', label:'技術面選股',
+              notes:[
+                {title:'追漲六心法', body:'1. 集中：籌碼集中在特定人手上\n2. 糾結：5/10/20均線糾結，60不遠\n3. 壓縮：價穩量縮（全紅最好）量能安定\n4. 突破：長紅K突破切線/頸線/前高\n5. 帶量：突破帶量，非詭異大量\n6. 實紅：上影線不超過1/2，尾盤以準當日高\n\n壓縮345：短壓5、月壓4、季壓3\n乖離輔助：季均小於、月均大於、短均大於\n\n初學版：突破＋四季五燈獎'},
+                {title:'雙線一型選股法（新手養成班）', body:'均線認識：\n• 定義：一段時間收盤價平均\n• 均線糾結 → 找股價整理的股票\n• 至少3線糾結（含季線靠攏）\n• 突破進場：K棒不要離5日線太遠\n• 均線須向上或平\n\n三種切線：\n• 下降趨勢線：空方壓力線，突破 → 空轉多\n• 上升趨勢線：多方支撐線，跌破 → 多轉空\n• 橫向平切：橫盤整理突破，多點觸碰才確實形成壓力\n\n橫向切線尋找條件：\n1. 過去一個月以上橫盤整理\n2. 成交量大的K棒高點，目前價格須突破\n3. 盤整價格幅度不要過大\n4. 觸碰越多點越具意義\n\n雙線一型總結：\n1. K棒在所有均線之上\n2. 三線糾結，季線靠攏\n3. 突破前高或橫切線\n4. 橫向整理區間狹窄\n\n停利：雙向移動停利法\n1. 設定%數（3~10%）\n2. 到達%數出部分\n3. 買入後最高價回跌此%數全出'},
+                {title:'進階應用特訓班', body:'均線壓縮 0~6，越大越壓縮\n\n趨勢強度 1~4\n突破＋趨勢強度低＝破切\n\n準當日高低\n準當日高 → 走勢圖的準創高\n\n過一高 當沖\n\n日內幅度\n> 0：紅K\n< 0：黑K\n數字大小：當天的波動\n搭配黑K投信買\n\n抓走勢：\n跳空強度<0 + 日內幅度>0：開低走高\n跳空強度>0 + 日內幅度<0：開高走低\n日內幅度介於2：狹幅震盪'},
+                {title:'切線畫法', body:'1. 連接兩個高點（須含影線）\n2. 中間不能有K棒穿越\n3. 其中一個高點可延伸至最低點\n\n突破切線 = 賣壓結束訊號 → 突破均線\n突破前高、頸線 > 支撐\n回測均線（月季線）→ 回檔'},
+                {title:'仙人指路', body:'1. 突破盤整（不能突破太多）\n2. 上影線長\n3. 量增（非爆大量）\n4. 出現在過去壓力區間\n\n使用時機：\n葛蘭碧訊號少 / 晚上做功課 / 股票漲多'},
+              ]
+            },
+            {
+              id:'stock-select-chip', label:'籌碼面選股',
+              notes:[
+                {title:'籌碼集中度', body:'籌碼集中度 = 前15大買超券商淨買超張數 ÷ 總成交量 %\n\n數值為正（集中）：籌碼流向大戶，有利波段上漲\n數值為負（發散）：籌碼持續流出，股價較容易下跌\n\n短線（1/3/5日）：\n單日 > 20% 或 5日 > 15%\n→ 主力積極吸貨，短線有發動機會\n\n中長線（10/20/60日）：\n60日 > 5% 或 120日 > 3%\n→ 籌碼長期穩定，不易受散戶恐慌崩跌'},
+                {title:'技籌邏輯：準創高選股', body:'準創高 = 頂上無壓（無解套賣壓）\n\n兩種情境：\n1. 尚未創高、準備創高\n2. 創高不久、賣壓尚未出籠\n\n最強組合：\n籌碼五燈獎 ＋ 月營收成長 ＋ K棒在長均線之上'},
+              ]
+            },
+            {
+              id:'stock-select-screen', label:'盤後篩選',
+              notes:[
+                {title:'盤後三種篩選法', body:'① 突破型\n突破＋三個籌碼（周線圖看壓力）\n\n② 平穩突破型\n突破平穩期＋法人大買超＋月營收成長\n→ 投信排序，土洋合作\n\n③ 多排回檔型\n多頭排列回檔＋法人買超\n多排＋黑K＋投信買\n→ 投信排序，找跌的\n\n隔日注意：\n長紅隔日不追高 / 跌破算失敗\n買點一：量縮回收側下影\n買點二：整理再次過前高'},
+              ]
+            },
+          ]
+        },
+        {
+          id:'stock-entry', label:'⏰ 進場判斷', children:[
+            {
+              id:'stock-entry-market', label:'大盤格局',
+              notes:[
+                {title:'大盤格局判斷', body:'外資期貨＋ + 散戶小台－ → 多頭格局\n外資期貨－ + 散戶小台＋ → 空頭格局\n符號相同 → 震盪\n\n短期三指標（外資現貨、外資期貨、散戶小台）：\n雙綠一紅 → 偏空\n雙紅一綠 → 偏多\n交雜 → 調節格局'},
+              ]
+            },
+            {
+              id:'stock-entry-sop', label:'盤中SOP',
+              notes:[
+                {title:'盤中SOP操作流程', body:'早盤：確認大盤格局（外資期貨 vs 散戶小台）\n12:00：挑選個股名單\n12:30 後：才考慮進場\n\n篩選量能股本，漲跌幅 < 5%\n條件篩選：糾結、壓縮\n\n雙突破共振點 → 可進場\n看走勢圖：走勢突破 + 日線突破\n\n準創高型態（前一日）\n突破大量判斷（站上大量最高點）→ 壓力轉支撐\n突破平穩期（當日）\n突破缺口：跳空強度 = 3\n\n突破沒買到可以等回測均線\n量縮回測的地方（第二次進場）\n→ 歷史訓練看過去三天，勾選突破OR突破平穩期\n量能、股本篩選，站均 > 4 OR 5 → 條件：過一高\n籌碼副圖判斷\n→ 若還有買超可以進場\n\n盤後做功課：\n• 籌碼打勾（盤後警報器）\n• 三種篩選條件跑一遍'},
+                {title:'選股到出場：完整流程', body:'① 篩選有機會的股票\n② 確認對的時間（大盤格局）\n③ 等盤中訊號（不急進場）\n④ 足夠資訊才判斷（技術面＋籌碼面 1+1）\n\n核心系統：葛蘭碧多空 ＋ 主力籌碼過濾'},
+              ]
+            },
+            {
+              id:'stock-entry-pullback', label:'回檔買點',
+              notes:[
+                {title:'大盤回檔的買點', body:'支撐種類（必須是上揚均線）：\n頸線、缺口、趨勢線、前波高點\n\n雙重支撐 = 符合兩個以上\n確認訊號 = 長下影線或短紅K\n\n多頭兩種買法：突破買、回檔買'},
+              ]
+            },
+          ]
+        },
+        {
+          id:'stock-exit', label:'🚪 出場規則',
+          notes:[
+            {title:'出場三種方法', body:'① 移動停利\n每次創高後設回檔%數，不斷往上移\n\n② 關鍵K棒停利\n帶量長紅、跳空紅K = 關鍵K棒\n跌破 = 警示，再次跌破 = 出場\n\n③ 達標出場法\n絕對達標 → 重視停利\n時間達標 → 當沖/隔日衝\n空間達標 → 下壓季線是壓力'},
+            {title:'六心法籌碼深解', body:'集中的本質：主力在盤整/盤跌段吸貨\n糾結的本質：避免追高/末升段\n壓縮的本質：價格波動小，籌碼安定\n\n六心法適用時機：盤整段或盤跌段'},
+          ]
+        },
+        {
+          id:'stock-special', label:'⚡ 特殊事件',
+          notes:[
+            {title:'除權息操作法', body:'工具：股期、權證（除息當天即領利）\n\n步驟：\n1. 監控：勾選股期、權證\n2. 特殊事件：勾選除權息\n3. 籌碼面：勾選（必要）\n4. 除權日、除息日打勾'},
+            {title:'處置股注意', body:'三天第一款：漲跌幅過大被關注\n連續5天注意股：持續異常\n\n操作：進入處置後 → 拉回找買點\n⚠️ 流動性差、買賣價差大'},
+          ]
+        },
+      ]
+    },
+    {
+      id:'finance', label:'💡 財商理財', children:[
+        {id:'finance-accum', label:'資產累積', notes:[
+          {title:'複利與72法則', body:'複利 = 賺到的利潤繼續幫你賺錢\n\n72法則：72 ÷ 年報酬率 = 翻倍年數\n年報酬7%：72÷7≈10年翻倍\n\n投入10萬，年報酬7%：\n第10年那一年：約12,900元\n第20年那一年：約25,400元\n第30年那一年：約50,000元'},
+          {title:'薪資分配法則', body:'建議：每月收入至少存20%投入ETF\n\n優先順序：\n1. 先建緊急備用金（3~6個月生活費）\n2. 清高利率負債（信用卡、信貸）\n3. 定期定額ETF\n4. 有餘裕再考慮個股'},
+        ]},
+        {id:'finance-etf', label:'台股ETF', notes:[
+          {title:'台股ETF比較', body:'0050 元大台灣50\n→ 追蹤台灣市值前50大，最接近大盤\n→ 適合：長期持有、不想選股\n\n0056 元大高股息\n→ 選高殖利率股票，配息較高\n→ 注意：高息不等於高報酬，總報酬常輸0050\n\n006208 富邦台50\n→ 跟0050類似但費用率更低\n→ 適合：長期存股\n\n00878 國泰永續高股息\n→ ESG概念，季配息\n→ 近年績效不錯，吸引存股族'},
+        ]},
+        {id:'finance-fire', label:'財務自由', notes:[
+          {title:'FIRE 概念與25倍法則', body:'FIRE = 財務獨立、提早退休\n\n25倍法則：目標資產 = 每年生活費 × 25\n月花3萬（年36萬）→ 目標900萬\n月花5萬（年60萬）→ 目標1,500萬\n\n4%法則：每年只提領資產的4%，可撐30年以上\n\n你的路徑：轉職後月薪5萬，每月存1.5萬投ETF\n→ 20年後約900萬，接近月花3萬的FIRE目標'},
+        ]},
+      ]
+    },
+    {
+      id:'data', label:'📊 數據分析', children:[
+        {id:'data-pandas', label:'Pandas', notes:[
+          {title:'Pandas 學習地圖', body:'已學會：\nDataFrame/Series、篩選、groupby、agg、\nnp.where、loc、idxmax、pivot_table、merge、\nSettingWithCopyWarning解法\n\n即將學：\n資料清理（drop_duplicates、rename、astype）\n字串處理（str.contains）\n日期處理（pd.to_datetime）\n\n下一個里程碑：\n用Lab1客服數據做完整分析，上傳GitHub作品集'},
+        ]},
+        {id:'data-stats', label:'統計', notes:[
+          {title:'統計基礎', body:'p-value：「如果兩組本來就沒差，卻看到這麼大差異的機率」\np < 0.05 → 差異不太可能是隨機的\n\nType I（偽陽性）：實際沒差，但你說有差 → 狼來了\nType II（偽陰性）：實際有差，但你說沒差 → 放走壞人\n\nCohen's d 效果量：\n< 0.2 小效果 / 0.2~0.8 中效果 / > 0.8 大效果'},
+        ]},
+      ]
+    },
+  ]
+};
+
+// Flatten all notes for search
+function flattenNotes(node, path=[]){
+  const current=[...path, node.label];
+  let results=[];
+  if(node.notes) node.notes.forEach(n=>results.push({...n, path:current, nodeId:node.id}));
+  if(node.children) node.children.forEach(child=>results.push(...flattenNotes(child,[...current])));
+  return results;
+}
+
+function MindPage(){
+  const [expanded, setExpanded]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem('mind_expanded')||'{"root":true,"stock":true,"finance":true,"data":true}');}
+    catch{return {root:true,stock:true,finance:true,data:true};}
+  });
+  const [selected, setSelected]=useState(null); // {node, note index}
+  const [editModal, setEditModal]=useState(null); // {type:'node'|'note', nodeId, noteIdx}
+  const [editVal, setEditVal]=useState({label:'',title:'',body:''});
+  const [addModal, setAddModal]=useState(null); // {parentId}
+  const [addVal, setAddVal]=useState({type:'node',label:'',title:'',body:''});
+  const [search, setSearch]=useState('');
+  const [treeData, setTreeData]=useState(()=>{
+    try{const s=localStorage.getItem('mind_tree'); return s?JSON.parse(s):MIND_DATA;}
+    catch{return MIND_DATA;}
+  });
+
+  const saveTree=(t)=>{setTreeData(t);try{localStorage.setItem('mind_tree',JSON.stringify(t));}catch(e){}};
+  const saveExpanded=(e)=>{setExpanded(e);try{localStorage.setItem('mind_expanded',JSON.stringify(e));}catch(e){}};
+
+  const toggleExpand=(id)=>{
+    const e={...expanded,[id]:!expanded[id]};
+    saveExpanded(e);
+  };
+
+  // Find node by id
+  function findNode(tree, id){
+    if(tree.id===id) return tree;
+    if(tree.children) for(const c of tree.children){const r=findNode(c,id);if(r)return r;}
+    return null;
+  }
+  function findParent(tree, id, parent=null){
+    if(tree.id===id) return parent;
+    if(tree.children) for(const c of tree.children){const r=findParent(c,id,tree);if(r!==undefined)return r;}
+    return undefined;
+  }
+  // Deep clone
+  const clone=(o)=>JSON.parse(JSON.stringify(o));
+
+  // Edit node label
+  const openEditNode=(node)=>{
+    setEditVal({label:node.label, title:'', body:''});
+    setEditModal({type:'node', nodeId:node.id});
+  };
+  // Edit note
+  const openEditNote=(nodeId, idx, note)=>{
+    setEditVal({label:'', title:note.title, body:note.body});
+    setEditModal({type:'note', nodeId, noteIdx:idx});
+  };
+  const saveEdit=()=>{
+    const t=clone(treeData);
+    if(editModal.type==='node'){
+      const n=findNode(t, editModal.nodeId);
+      if(n) n.label=editVal.label;
+    } else {
+      const n=findNode(t, editModal.nodeId);
+      if(n&&n.notes) n.notes[editModal.noteIdx]={title:editVal.title, body:editVal.body};
+    }
+    saveTree(t); setEditModal(null);
+  };
+  // Delete node
+  const deleteNode=(id)=>{
+    if(!confirm('確定刪除這個節點（含所有子節點）？')) return;
+    const t=clone(treeData);
+    const parent=findParent(t,id);
+    if(parent&&parent.children) parent.children=parent.children.filter(c=>c.id!==id);
+    saveTree(t);
+    if(selected&&selected.nodeId===id) setSelected(null);
+  };
+  // Delete note
+  const deleteNote=(nodeId, idx)=>{
+    if(!confirm('確定刪除這則筆記？')) return;
+    const t=clone(treeData);
+    const n=findNode(t,nodeId);
+    if(n&&n.notes) n.notes.splice(idx,1);
+    saveTree(t);
+    setSelected(null);
+  };
+  // Add node or note
+  const openAdd=(parentId)=>{
+    setAddVal({type:'node',label:'新節點',title:'',body:''});
+    setAddModal({parentId});
+  };
+  const saveAdd=()=>{
+    const t=clone(treeData);
+    const parent=findNode(t, addModal.parentId);
+    if(!parent) return;
+    if(addVal.type==='node'){
+      if(!parent.children) parent.children=[];
+      parent.children.push({id:'n'+Date.now(), label:addVal.label, notes:[]});
+    } else {
+      if(!parent.notes) parent.notes=[];
+      parent.notes.push({title:addVal.title, body:addVal.body});
+    }
+    saveTree(t); setAddModal(null);
+    saveExpanded({...expanded,[addModal.parentId]:true});
+  };
+
+  // Search
+  const allNotes=flattenNotes(treeData);
+  const searchResults=search.trim()
+    ? allNotes.filter(n=>n.title.includes(search)||n.body.includes(search))
+    : [];
+
+  // Render tree
+  function TreeNode({node, depth=0}){
+    const isExp=expanded[node.id];
+    const hasChildren=node.children&&node.children.length>0;
+    const hasNotes=node.notes&&node.notes.length>0;
+    const isExpandable=hasChildren||hasNotes;
+    return <div style={{marginLeft:depth>0?20:0}}>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',borderRadius:8,cursor:'pointer',background:selected&&selected.nodeId===node.id?'var(--cream)':'transparent',transition:'background .15s',group:true}}
+        onMouseEnter={e=>e.currentTarget.style.background='var(--cream)'}
+        onMouseLeave={e=>e.currentTarget.style.background=selected&&selected.nodeId===node.id?'var(--cream)':'transparent'}>
+        <span style={{fontSize:12,color:'var(--muted)',width:16,textAlign:'center',flexShrink:0,cursor:isExpandable?'pointer':'default'}}
+          onClick={()=>isExpandable&&toggleExpand(node.id)}>
+          {isExpandable?(isExp?'▾':'▸'):'•'}
+        </span>
+        <span style={{fontSize:14,fontWeight:depth===0?600:depth===1?500:400,flex:1,cursor:'pointer'}}
+          onClick={()=>{ if(isExpandable)toggleExpand(node.id); setSelected({nodeId:node.id,noteIdx:null}); }}>
+          {node.label}
+        </span>
+        <div style={{display:'flex',gap:3,flexShrink:0}}>
+          <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>openAdd(node.id)} title="新增">＋</button>
+          <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>openEditNode(node)} title="編輯">✏️</button>
+          {node.id!=='root'&&<button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>deleteNode(node.id)} title="刪除">🗑️</button>}
+        </div>
+      </div>
+      {isExp&&<>
+        {hasNotes&&<div style={{marginLeft:36}}>
+          {node.notes.map((note,i)=><div key={i}
+            style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',borderRadius:6,cursor:'pointer',background:selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}}
+            onMouseEnter={e=>e.currentTarget.style.background='#edf3fa'}
+            onMouseLeave={e=>e.currentTarget.style.background=selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}>
+            <span style={{fontSize:11,color:'var(--border)',flexShrink:0}}>📄</span>
+            <span style={{fontSize:13,flex:1}} onClick={()=>setSelected({nodeId:node.id,noteIdx:i})}>{note.title}</span>
+            <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 4px'}} onClick={()=>openEditNote(node.id,i,note)}>✏️</button>
+            <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 4px'}} onClick={()=>deleteNote(node.id,i)}>🗑️</button>
+          </div>)}
+        </div>}
+        {hasChildren&&node.children.map(child=><TreeNode key={child.id} node={child} depth={depth+1}/>)}
+      </>}
+    </div>
+  }
+
+  // Selected note content
+  const selNote = selected&&selected.noteIdx!==null
+    ? findNode(treeData,selected.nodeId)?.notes?.[selected.noteIdx]
+    : null;
+
+  return <div style={{display:'flex',height:'calc(100vh - 52px)',overflow:'hidden'}}>
+    {/* Left panel - tree */}
+    <div style={{width:300,flexShrink:0,borderRight:'1px solid var(--border)',overflowY:'auto',padding:'1rem'}}>
+      <div style={{marginBottom:12}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)}
+          style={{width:'100%',padding:'7px 10px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'var(--card)',boxSizing:'border-box'}}
+          placeholder="搜尋筆記…"/>
+      </div>
+      {search.trim()
+        ? <div>{searchResults.length===0
+            ? <div style={{fontSize:13,color:'var(--muted)',textAlign:'center',padding:'1rem'}}>找不到相關筆記</div>
+            : searchResults.map((n,i)=><div key={i} style={{padding:'8px 10px',borderRadius:6,cursor:'pointer',marginBottom:4,background:'var(--card)',border:'1px solid var(--border)'}}
+                onClick={()=>{ setSearch(''); setSelected({nodeId:n.nodeId,noteIdx:findNode(treeData,n.nodeId)?.notes?.findIndex(x=>x.title===n.title&&x.body===n.body)}); }}>
+                <div style={{fontSize:12,color:'var(--muted)',marginBottom:2}}>{n.path.slice(1).join(' › ')}</div>
+                <div style={{fontSize:13,fontWeight:500}}>{n.title}</div>
+              </div>)
+          }</div>
+        : <TreeNode node={treeData}/>
+      }
+    </div>
+    {/* Right panel - note content */}
+    <div style={{flex:1,overflowY:'auto',padding:'1.5rem 2rem'}}>
+      {selNote
+        ? <><div style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--muted)',marginBottom:8}}>
+            {(()=>{const n=findNode(treeData,selected.nodeId);const p=[];let cur=n;const all=flattenNotes(treeData);return p.join(' › ')})()}
+          </div>
+          <h2 style={{fontSize:'1.4rem',fontWeight:500,marginBottom:'1rem'}}>{selNote.title}</h2>
+          <div style={{fontSize:14,color:'#4a4540',lineHeight:1.85,whiteSpace:'pre-wrap',background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,padding:'1.2rem 1.5rem'}}>{selNote.body}</div>
+          <div style={{display:'flex',gap:8,marginTop:12}}>
+            <button onClick={()=>openEditNote(selected.nodeId,selected.noteIdx,selNote)} style={{padding:'7px 16px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',cursor:'pointer'}}>✏️ 編輯</button>
+            <button onClick={()=>deleteNote(selected.nodeId,selected.noteIdx)} style={{padding:'7px 16px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',color:'var(--accent)',cursor:'pointer'}}>🗑️ 刪除</button>
+          </div>
+        </>
+        : <div style={{textAlign:'center',padding:'4rem 2rem',color:'var(--muted)'}}>
+            <div style={{fontSize:'2.5rem',marginBottom:12}}>🗂️</div>
+            <div style={{fontSize:15,marginBottom:8}}>選擇左側節點查看筆記</div>
+            <div style={{fontSize:13}}>點 ＋ 可以新增子節點或筆記</div>
+          </div>
+      }
+    </div>
+
+    {/* Edit Modal */}
+    {editModal&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',zIndex:999,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}
+      onClick={e=>{if(e.target===e.currentTarget)setEditModal(null)}}>
+      <div style={{background:'var(--paper)',borderRadius:12,padding:'1.5rem',width:'100%',maxWidth:480,border:'1px solid var(--border)'}}>
+        <h3 style={{fontSize:15,fontWeight:500,marginBottom:'1rem'}}>{editModal.type==='node'?'編輯節點':'編輯筆記'}</h3>
+        {editModal.type==='node'
+          ? <div style={{marginBottom:12}}><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>節點名稱</label>
+              <input value={editVal.label} onChange={e=>setEditVal(p=>({...p,label:e.target.value}))}
+                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',boxSizing:'border-box'}}/>
+            </div>
+          : <><div style={{marginBottom:12}}><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>標題</label>
+              <input value={editVal.title} onChange={e=>setEditVal(p=>({...p,title:e.target.value}))}
+                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',boxSizing:'border-box'}}/>
+            </div>
+            <div style={{marginBottom:12}}><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>內容</label>
+              <textarea value={editVal.body} onChange={e=>setEditVal(p=>({...p,body:e.target.value}))}
+                style={{width:'100%',minHeight:200,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',resize:'vertical',lineHeight:1.75,boxSizing:'border-box'}}/>
+            </div>
+          </>
+        }
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+          <button onClick={()=>setEditModal(null)} style={{padding:'8px 18px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',cursor:'pointer'}}>取消</button>
+          <button onClick={saveEdit} style={{padding:'8px 18px',background:'var(--blue)',color:'#fff',border:'none',borderRadius:6,fontSize:13,cursor:'pointer'}}>儲存</button>
+        </div>
+      </div>
+    </div>}
+
+    {/* Add Modal */}
+    {addModal&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',zIndex:999,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}
+      onClick={e=>{if(e.target===e.currentTarget)setAddModal(null)}}>
+      <div style={{background:'var(--paper)',borderRadius:12,padding:'1.5rem',width:'100%',maxWidth:480,border:'1px solid var(--border)'}}>
+        <h3 style={{fontSize:15,fontWeight:500,marginBottom:'1rem'}}>新增</h3>
+        <div style={{display:'flex',gap:8,marginBottom:14}}>
+          <button onClick={()=>setAddVal(p=>({...p,type:'node'}))} style={{flex:1,padding:'8px',border:'1.5px solid',borderColor:addVal.type==='node'?'var(--blue)':'var(--border)',borderRadius:6,fontSize:13,background:addVal.type==='node'?'var(--blue)':'none',color:addVal.type==='node'?'#fff':'var(--muted)',cursor:'pointer'}}>子節點</button>
+          <button onClick={()=>setAddVal(p=>({...p,type:'note'}))} style={{flex:1,padding:'8px',border:'1.5px solid',borderColor:addVal.type==='note'?'var(--blue)':'var(--border)',borderRadius:6,fontSize:13,background:addVal.type==='note'?'var(--blue)':'none',color:addVal.type==='note'?'#fff':'var(--muted)',cursor:'pointer'}}>筆記</button>
+        </div>
+        {addVal.type==='node'
+          ? <div style={{marginBottom:12}}><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>節點名稱</label>
+              <input value={addVal.label} onChange={e=>setAddVal(p=>({...p,label:e.target.value}))}
+                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',boxSizing:'border-box'}}/>
+            </div>
+          : <><div style={{marginBottom:12}}><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>標題</label>
+              <input value={addVal.title} onChange={e=>setAddVal(p=>({...p,title:e.target.value}))}
+                style={{width:'100%',padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',boxSizing:'border-box'}}/>
+            </div>
+            <div><label style={{fontSize:12,color:'var(--muted)',display:'block',marginBottom:4}}>內容</label>
+              <textarea value={addVal.body} onChange={e=>setAddVal(p=>({...p,body:e.target.value}))}
+                style={{width:'100%',minHeight:160,padding:'9px 12px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:14,background:'var(--card)',resize:'vertical',lineHeight:1.75,boxSizing:'border-box'}}/>
+            </div>
+          </>
+        }
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',marginTop:14}}>
+          <button onClick={()=>setAddModal(null)} style={{padding:'8px 18px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',cursor:'pointer'}}>取消</button>
+          <button onClick={saveAdd} style={{padding:'8px 18px',background:'var(--blue)',color:'#fff',border:'none',borderRadius:6,fontSize:13,cursor:'pointer'}}>新增</button>
+        </div>
+      </div>
+    </div>}
+  </div>
+}
+
 // ── Lab Page ──
 const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const RC=arr=>arr[Math.floor(Math.random()*arr.length)];
@@ -1372,7 +1733,7 @@ function FloatingNote({userNotes, onSave}){
 // ═══════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════
-const TABS=[{id:'lab',label:'實作 Lab'},{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'notes',label:'個人筆記'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
+const TABS=[{id:'lab',label:'實作 Lab'},{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'mind',label:'知識地圖'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
@@ -1400,6 +1761,7 @@ function App(){
       </div>
     </nav>
     {tab==='lab'&&<LabPage/>}
+    {tab==='mind'&&<MindPage/>}
     {tab==='learn'&&<LearnPage/>}
     {tab==='stock'&&<StockPage/>}
     {tab==='notes'&&<NotesPage userNotes={userNotes} onSave={saveNotes}/>}
