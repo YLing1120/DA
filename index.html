@@ -886,15 +886,18 @@ function NotesPage({userNotes, onSave}){
 
 // ── 財商知識 (Finance) ──
 function FinancePage(){
-  const tabs=[{id:'money',label:'💰 理財觀念'},{id:'tax',label:'🧾 稅務'},{id:'fire',label:'🔥 財務自由'}];
+  const tabs=[{id:'money',label:'💰 理財觀念'},{id:'twstock',label:'🇹🇼 台股投資'},{id:'alloc',label:'⚖️ 資產配置'},{id:'accum',label:'📈 資產累積'},{id:'tax',label:'🧾 稅務'},{id:'fire',label:'🔥 財務自由'}];
   const [tab,setTab]=useState('money');
   return <div className="wrap">
     <div className="page-title">財商知識</div>
-    <div className="page-sub">理財觀念 × 稅務基礎 × 財務自由</div>
+    <div className="page-sub">理財觀念 × 台股投資 × 資產配置 × 財務自由</div>
     <div className="sub-nav" style={{marginBottom:'1.5rem'}}>
       {tabs.map(t=><button key={t.id} className={`sub-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}
     </div>
     {tab==='money'&&<MoneySection/>}
+    {tab==='twstock'&&<TwStockSection/>}
+    {tab==='alloc'&&<AllocSection/>}
+    {tab==='accum'&&<AccumSection/>}
     {tab==='tax'&&<TaxSection/>}
     {tab==='fire'&&<FireSection/>}
   </div>
@@ -919,6 +922,154 @@ function MoneySection(){return <>
   </table>
   <Ok>✅ 給初學者：先建緊急備用金 → 定期定額買台股或全球ETF（0050、VOO）→ 有更多知識再考慮個股</Ok></Card>
 </>}
+
+function TwStockSection(){return <>
+  <Card><h3>台股市場基本認識</h3>
+  <p>台灣股市（TWSE）是全球重要的科技股市場，台積電一家公司就佔大盤市值超過30%。了解台股結構，才能看懂大盤的漲跌邏輯。</p>
+  <div className="grid2">
+    <div><h4>基本數字</h4>
+    <div className="signal-row"><div className="signal-label">交易時間</div><div className="signal-desc">週一至週五 09:00–13:30，盤後交易 14:00–14:30</div></div>
+    <div className="signal-row"><div className="signal-label">漲跌幅限制</div><div className="signal-desc">±10%（處置股±5%，全額交割股無漲跌幅）</div></div>
+    <div className="signal-row"><div className="signal-label">交易單位</div><div className="signal-desc">1張 = 1000股，零股可以買1股以上</div></div>
+    <div className="signal-row"><div className="signal-label">結算</div><div className="signal-desc">T+2（成交後第2個交易日完成交割）</div></div></div>
+    <div><h4>費用</h4>
+    <div className="signal-row"><div className="signal-label">手續費</div><div className="signal-desc">買賣各0.1425%，券商通常打折（6折常見）</div></div>
+    <div className="signal-row"><div className="signal-label">證交稅</div><div className="signal-desc">賣出時0.3%（ETF 0.1%，當沖0.15%）</div></div>
+    <div className="signal-row"><div className="signal-label">實際成本</div><div className="signal-desc">買進：0.1425% × 折扣；賣出：0.1425% × 折扣 + 0.3%</div></div></div>
+  </div></Card>
+
+  <Card><h3>台股ETF完整比較</h3>
+  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+    <thead><tr>{['代號','名稱','追蹤標的','費用率','配息','適合誰'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+    <tbody>{[
+      ['0050','元大台灣50','台灣市值前50大','0.46%','年配1次','想持有台股核心'],
+      ['006208','富邦台50','台灣市值前50大','0.15%','半年配','0050平替，費用更低'],
+      ['0056','元大高股息','高股息因子','0.66%','年配1次','在意現金流，但總報酬常輸0050'],
+      ['00878','國泰永續高股息','ESG高股息','0.46%','季配','近年績效不錯，受存股族喜愛'],
+      ['00646','元大S&P500','美國S&P500','0.25%','半年配','想投資美股但用台幣買'],
+      ['00713','元大台灣高息低波','低波動高股息','0.46%','季配','退休族、穩定配息優先'],
+    ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'8px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top'}}>{cell}</td>)}</tr>)}</tbody>
+  </table>
+  <Warn>⚠️ 高股息ETF的「高殖利率」來自把你的錢配給你，不是憑空創造收益。長期總報酬（含配息再投入）0050通常優於0056。</Warn></Card>
+
+  <Card><h3>台股主要族群</h3>
+  <div className="grid2">
+    <div>
+      <h4>半導體族群</h4>
+      <p>台股最重要的族群，台積電為核心。景氣循環明顯，跟AI/智慧型手機需求高度相關。</p>
+      <Hl>台積電漲跌影響整體大盤約30%以上，看台股先看台積電</Hl>
+      <p style={{fontSize:13,color:'var(--muted)'}}>相關股：台積電、聯發科、日月光、聯詠、瑞昱</p>
+    </div>
+    <div>
+      <h4>金融族群</h4>
+      <p>銀行、保險、證券。受升降息影響大，升息環境對銀行股有利。配息穩定，常是存股標的。</p>
+      <p style={{fontSize:13,color:'var(--muted)'}}>相關股：富邦金、國泰金、玉山金、兆豐金</p>
+    </div>
+    <div>
+      <h4>傳產族群</h4>
+      <p>鋼鐵、塑化、航運、水泥。景氣循環明顯，原物料價格是關鍵驅動因素。</p>
+      <p style={{fontSize:13,color:'var(--muted)'}}>相關股：中鋼、台化、長榮、萬海</p>
+    </div>
+    <div>
+      <h4>電子族群</h4>
+      <p>電腦、手機、面板、伺服器。AI伺服器近年是熱門題材，跟輝達供應鏈高度相關。</p>
+      <p style={{fontSize:13,color:'var(--muted)'}}>相關股：鴻海、廣達、緯創、友達</p>
+    </div>
+  </div></Card>
+
+  <Card><h3>除權息完整說明</h3>
+  <div className="signal-row"><div className="signal-label">除息日</div><div className="signal-desc">這天買到股票才有資格領息，除息日當天股價會「跳空」下跌約等於股息金額</div></div>
+  <div className="signal-row"><div className="signal-label">填息</div><div className="signal-desc">除息後股價漲回除息前水準，代表你真的賺到了股息</div></div>
+  <div className="signal-row"><div className="signal-label">貼息</div><div className="signal-desc">除息後股價沒有回升，等於白領股息，總資產反而縮水</div></div>
+  <Formula>殖利率(%) = 現金股利 ÷ 股價 × 100%{'
+'}例：股價100元，配息5元 → 殖利率5%</Formula>
+  <Warn>⚠️ 追求高殖利率要注意：殖利率高可能是因為股價跌很多，不代表公司體質好</Warn></Card>
+</>}
+
+function AllocSection(){return <>
+  <Card><h3>為什麼要資產配置？</h3>
+  <p>不同資產類別在不同市場環境下表現不同。股票漲的時候債券可能跌，把錢分散在不同資產，可以降低整體波動，讓你睡得著覺。</p>
+  <Hl>核心概念：不把雞蛋放在同一個籃子裡<br/>目標：在你能接受的風險範圍內，追求最佳報酬</Hl></Card>
+
+  <Card><h3>股債配置比例</h3>
+  <p>最常見的原則：<strong>股票比例 = 100 - 年齡</strong>（或更積極的 110 - 年齡）</p>
+  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,marginTop:10}}>
+    <thead><tr>{['階段','股票','債券','現金','說明'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+    <tbody>{[
+      ['20–30歲（你現在）','80–90%','5–10%','5–10%','時間多，可承受高波動，以成長為主'],
+      ['30–40歲','70–80%','10–20%','5–10%','開始平衡，逐步降低風險'],
+      ['40–50歲','60–70%','20–30%','10%','資產累積後期，保護為輔'],
+      ['50歲以上','40–60%','30–40%','10–20%','接近退休，保本優先'],
+    ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'8px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top'}}>{cell}</td>)}</tr>)}</tbody>
+  </table>
+  <p style={{fontSize:13,color:'var(--muted)',marginTop:10}}>以你現在的年齡和轉職目標，80–90%股票（台股ETF為主）是合理的起點。</p></Card>
+
+  <Card><h3>核心衛星策略（Core-Satellite）</h3>
+  <p>把資產分成兩個部分：</p>
+  <div className="grid2">
+    <Hl><strong>核心（70–80%）</strong><br/>低成本指數ETF，長期持有不動<br/>例：0050、006208、VOO<br/>目的：穩定追蹤大盤報酬</Hl>
+    <Ok><strong>衛星（20–30%）</strong><br/>主動選股或特定主題ETF<br/>例：個股、半導體ETF<br/>目的：嘗試超越大盤報酬</Ok>
+  </div>
+  <p>好處：核心部位保底，衛星部位讓你有操作空間，不會因為個股輸太多而影響整體資產。</p></Card>
+
+  <Card><h3>再平衡是什麼？</h3>
+  <p>時間久了，漲多的資產比例會超過目標，跌多的會低於目標。再平衡就是賣一些漲多的，買一些跌多的，恢復原來的比例。</p>
+  <Hl>多久做一次？<br/>建議一年一次，或當某類資產偏離目標比例超過5–10%時做一次<br/>不需要太頻繁，交易成本會吃掉收益</Hl>
+  <Warn>⚠️ 再平衡是「賣強買弱」，心理上很難執行。但長期來看，紀律執行再平衡的投資人通常比跟著感覺走的人表現更好</Warn></Card>
+</>}
+
+function AccumSection(){return <>
+  <Card><h3>薪資分配法則</h3>
+  <p>錢沒有規劃就會不知不覺消失。兩個最常用的分配法：</p>
+  <div className="grid2">
+    <div>
+      <h4>50/30/20 法則</h4>
+      <Hl>50% 必要支出（房租、餐費、交通）<br/>30% 想要支出（娛樂、購物）<br/>20% 儲蓄/投資</Hl>
+      <p style={{fontSize:13,color:'var(--muted)'}}>適合入門，簡單好記</p>
+    </div>
+    <div>
+      <h4>先儲蓄後消費</h4>
+      <Hl>發薪日立刻轉出投資金額<br/>剩下的才是可花的錢<br/>建議至少存收入的20–30%</Hl>
+      <p style={{fontSize:13,color:'var(--muted)'}}>強迫儲蓄，效果更好</p>
+    </div>
+  </div>
+  <Ok>✅ 以你現在的目標：轉職後薪資提升 → 維持現有生活水準不膨脹 → 把加薪的部分直接投入ETF，是最快累積資產的方式</Ok></Card>
+
+  <Card><h3>定期定額 vs 單筆投入</h3>
+  <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+    <thead><tr>{['','定期定額','單筆投入'].map(h=><th key={h} style={{background:'var(--cream)',padding:'8px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+    <tbody>{[
+      ['適合情況','每月有固定收入想投資','一次有大筆資金（獎金、遺產）'],
+      ['優點','平均成本、不用擇時、心理壓力小','多頭市場報酬高於定期定額'],
+      ['缺點','多頭市場稍微輸單筆','需要一次判斷市場，壓力大'],
+      ['歷史數據','長期勝率穩定','若在高點買進需要更長時間回本'],
+    ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'8px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top',fontWeight:j===0?500:400}}>{cell}</td>)}</tr>)}</tbody>
+  </table>
+  <Hl>結論：大多數上班族選定期定額，減少擇時壓力。有大筆資金可以「分批單筆」（例如分3–6個月投入），兼顧兩者優點</Hl></Card>
+
+  <Card><h3>增加收入 vs 降低支出，哪個更重要？</h3>
+  <div className="grid2">
+    <div>
+      <h4>降低支出</h4>
+      <p>效果有上限（不能花負的），但立竿見影，任何時候都能做。</p>
+      <p style={{fontSize:13,color:'var(--muted)'}}>每月省1,000元，一年12,000元</p>
+    </div>
+    <div>
+      <h4>增加收入</h4>
+      <p>效果無上限，時間拉長複利效果驚人，但需要投資（學習、技能提升）。</p>
+      <p style={{fontSize:13,color:'var(--muted)'}}>月薪從3.5萬升到5萬，一年多18萬</p>
+    </div>
+  </div>
+  <Ok>✅ 你現在做的事（學數據分析轉職）本質上就是在「增加收入」，這是資產累積最強的槓桿，比省吃儉用省出來的錢多得多</Ok>
+  <Warn>⚠️ 但增加收入後要注意「生活水準膨脹」——薪水漲了但支出同步漲，存款反而沒增加</Warn></Card>
+
+  <Card><h3>各階段資產累積重點</h3>
+  <div className="signal-row"><div className="signal-label">20–25歲</div><div className="signal-desc">建立緊急備用金（3個月）→ 開始定期定額ETF（哪怕1,000元也好）→ 最重要的是投資自己的技能</div></div>
+  <div className="signal-row"><div className="signal-label">25–30歲</div><div className="signal-desc">技能提升 → 薪資跳升 → 加大ETF投入 → 開始學習個股（用小部位練習）</div></div>
+  <div className="signal-row"><div className="signal-label">30–35歲</div><div className="signal-desc">核心ETF配置穩定 → 衛星個股操作 → 考慮是否需要房產（自住 vs 繼續投資）</div></div>
+  <div className="signal-row"><div className="signal-label">35歲以上</div><div className="signal-desc">資產規模開始有感 → 複利效果顯現 → 被動收入逐漸能補貼生活</div></div></Card>
+</>}
+
 function TaxSection(){return <>
   <Card><h3>先有全局概念</h3>
   <Hl>買賣股票賺差價 → 目前免稅（資本利得稅暫停課徵）<br/>賣出股票時 → 自動扣證交稅（0.3%），不用管<br/>收到股利 → 要申報，可以選對自己有利的方式計算</Hl></Card>
@@ -1188,7 +1339,7 @@ const MIND_DATA = {
           {title:'Pandas 學習地圖', body:'已學會：\nDataFrame/Series、篩選、groupby、agg、\nnp.where、loc、idxmax、pivot_table、merge、\nSettingWithCopyWarning解法\n\n即將學：\n資料清理（drop_duplicates、rename、astype）\n字串處理（str.contains）\n日期處理（pd.to_datetime）\n\n下一個里程碑：\n用Lab1客服數據做完整分析，上傳GitHub作品集'},
         ]},
         {id:'data-stats', label:'統計', notes:[
-          {title:'統計基礎', body:'p-value：「如果兩組本來就沒差，卻看到這麼大差異的機率」\np < 0.05 → 差異不太可能是隨機的\n\nType I（偽陽性）：實際沒差，但你說有差 → 狼來了\nType II（偽陰性）：實際有差，但你說沒差 → 放走壞人\n\nCohen's d 效果量：\n< 0.2 小效果 / 0.2~0.8 中效果 / > 0.8 大效果'},
+          {title:"統計基礎", body:"p-value：「如果兩組本來就沒差，卻看到這麼大差異的機率」\np < 0.05 → 差異不太可能是隨機的\n\nType I（偽陽性）：實際沒差，但你說有差 → 狼來了\nType II（偽陰性）：實際有差，但你說沒差 → 放走壞人\n\nCohen's d 效果量：\n< 0.2 小效果 / 0.2~0.8 中效果 / > 0.8 大效果"},
         ]},
       ]
     },
@@ -1307,16 +1458,77 @@ function MindPage(){
     ? allNotes.filter(n=>n.title.includes(search)||n.body.includes(search))
     : [];
 
+  // Drag state
+  const [dragId, setDragId]=useState(null);
+  const [dragOver, setDragOver]=useState(null);
+  const [moveModal, setMoveModal]=useState(null); // {nodeId}
+
+  // Reorder within same parent
+  const handleDrop=(targetId, parentChildren, parentNode)=>{
+    if(!dragId||dragId===targetId) return;
+    const t=clone(treeData);
+    const parent=findNode(t, parentNode.id);
+    if(!parent||!parent.children) return;
+    const fromIdx=parent.children.findIndex(c=>c.id===dragId);
+    const toIdx=parent.children.findIndex(c=>c.id===targetId);
+    if(fromIdx===-1||toIdx===-1) return;
+    const [moved]=parent.children.splice(fromIdx,1);
+    parent.children.splice(toIdx,0,moved);
+    saveTree(t);
+    setDragId(null); setDragOver(null);
+  };
+
+  // Get all nodes as flat list for move target selection
+  function getAllNodes(node, depth=0, result=[]){
+    if(node.id!=='root') result.push({id:node.id, label:node.label, depth});
+    if(node.children) node.children.forEach(c=>getAllNodes(c,depth+1,result));
+    return result;
+  }
+
+  // Move node to new parent
+  const moveNodeTo=(nodeId, newParentId)=>{
+    if(nodeId===newParentId) return;
+    const t=clone(treeData);
+    // Check not moving to own descendant
+    const nodeToMove=findNode(t,nodeId);
+    if(findNode(nodeToMove,newParentId)) { alert('不能移動到自己的子節點下'); return; }
+    // Remove from current parent
+    const oldParent=findParent(t,nodeId);
+    if(!oldParent||!oldParent.children) return;
+    const idx=oldParent.children.findIndex(c=>c.id===nodeId);
+    const [moved]=oldParent.children.splice(idx,1);
+    // Add to new parent
+    const newParent=findNode(t,newParentId);
+    if(!newParent.children) newParent.children=[];
+    newParent.children.push(moved);
+    saveTree(t);
+    saveExpanded({...expanded,[newParentId]:true});
+    setMoveModal(null);
+  };
+
   // Render tree
-  function TreeNode({node, depth=0}){
+  function TreeNode({node, depth=0, parentNode=null}){
     const isExp=expanded[node.id];
     const hasChildren=node.children&&node.children.length>0;
     const hasNotes=node.notes&&node.notes.length>0;
     const isExpandable=hasChildren||hasNotes;
-    return <div style={{marginLeft:depth>0?20:0}}>
-      <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',borderRadius:8,cursor:'pointer',background:selected&&selected.nodeId===node.id?'var(--cream)':'transparent',transition:'background .15s',group:true}}
-        onMouseEnter={e=>e.currentTarget.style.background='var(--cream)'}
-        onMouseLeave={e=>e.currentTarget.style.background=selected&&selected.nodeId===node.id?'var(--cream)':'transparent'}>
+    const isDragging=dragId===node.id;
+    const isDragOver=dragOver===node.id;
+
+    return <div style={{marginLeft:depth>0?20:0, opacity:isDragging?0.4:1}}
+      draggable={node.id!=='root'}
+      onDragStart={()=>setDragId(node.id)}
+      onDragEnd={()=>{setDragId(null);setDragOver(null);}}
+      onDragOver={e=>{e.preventDefault();setDragOver(node.id);}}
+      onDragLeave={()=>setDragOver(null)}
+      onDrop={()=>parentNode&&handleDrop(node.id, parentNode.children, parentNode)}>
+      <div style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',borderRadius:8,cursor:'grab',
+        background:isDragOver?'#edf3fa':selected&&selected.nodeId===node.id?'var(--cream)':'transparent',
+        border:isDragOver?'1.5px dashed var(--blue)':'1.5px solid transparent',
+        transition:'all .15s'}}
+        onMouseEnter={e=>{ if(!isDragOver&&!(selected&&selected.nodeId===node.id)) e.currentTarget.style.background='var(--cream)'; }}
+        onMouseLeave={e=>{ if(!isDragOver&&!(selected&&selected.nodeId===node.id)) e.currentTarget.style.background='transparent'; }}>
+        <span style={{fontSize:10,color:'var(--border)',flexShrink:0,cursor:'grab'}}>⠿</span>
         <span style={{fontSize:12,color:'var(--muted)',width:16,textAlign:'center',flexShrink:0,cursor:isExpandable?'pointer':'default'}}
           onClick={()=>isExpandable&&toggleExpand(node.id)}>
           {isExpandable?(isExp?'▾':'▸'):'•'}
@@ -1328,13 +1540,15 @@ function MindPage(){
         <div style={{display:'flex',gap:3,flexShrink:0}}>
           <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>openAdd(node.id)} title="新增">＋</button>
           <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>openEditNode(node)} title="編輯">✏️</button>
+          {node.id!=='root'&&<button style={{background:'none',border:'none',fontSize:11,color:'var(--blue)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>setMoveModal({nodeId:node.id})} title="移動">↕</button>}
           {node.id!=='root'&&<button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 5px',borderRadius:4}} onClick={()=>deleteNode(node.id)} title="刪除">🗑️</button>}
         </div>
       </div>
       {isExp&&<>
         {hasNotes&&<div style={{marginLeft:36}}>
           {node.notes.map((note,i)=><div key={i}
-            style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',borderRadius:6,cursor:'pointer',background:selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}}
+            style={{display:'flex',alignItems:'center',gap:6,padding:'4px 8px',borderRadius:6,cursor:'pointer',
+              background:selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}}
             onMouseEnter={e=>e.currentTarget.style.background='#edf3fa'}
             onMouseLeave={e=>e.currentTarget.style.background=selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}>
             <span style={{fontSize:11,color:'var(--border)',flexShrink:0}}>📄</span>
@@ -1343,10 +1557,13 @@ function MindPage(){
             <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 4px'}} onClick={()=>deleteNote(node.id,i)}>🗑️</button>
           </div>)}
         </div>}
-        {hasChildren&&node.children.map(child=><TreeNode key={child.id} node={child} depth={depth+1}/>)}
+        {hasChildren&&node.children.map(child=><TreeNode key={child.id} node={child} depth={depth+1} parentNode={node}/>)}
       </>}
     </div>
   }
+
+  // Move modal
+  const allNodesFlat=getAllNodes(treeData);
 
   // Selected note content
   const selNote = selected&&selected.noteIdx!==null
@@ -1418,6 +1635,25 @@ function MindPage(){
           <button onClick={()=>setEditModal(null)} style={{padding:'8px 18px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',cursor:'pointer'}}>取消</button>
           <button onClick={saveEdit} style={{padding:'8px 18px',background:'var(--blue)',color:'#fff',border:'none',borderRadius:6,fontSize:13,cursor:'pointer'}}>儲存</button>
         </div>
+      </div>
+    </div>}
+
+    {/* Move Modal */}
+    {moveModal&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',zIndex:999,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}
+      onClick={e=>{if(e.target===e.currentTarget)setMoveModal(null)}}>
+      <div style={{background:'var(--paper)',borderRadius:12,padding:'1.5rem',width:'100%',maxWidth:400,border:'1px solid var(--border)',maxHeight:'70vh',display:'flex',flexDirection:'column'}}>
+        <h3 style={{fontSize:15,fontWeight:500,marginBottom:'0.8rem'}}>移動到…</h3>
+        <div style={{overflowY:'auto',flex:1}}>
+          {allNodesFlat.filter(n=>n.id!==moveModal.nodeId).map(n=><div key={n.id}
+            style={{padding:'8px 12px',borderRadius:6,cursor:'pointer',fontSize:14,marginBottom:4,
+              paddingLeft:12+n.depth*16,background:'var(--card)',border:'1px solid var(--border)'}}
+            onMouseEnter={e=>e.currentTarget.style.background='#edf3fa'}
+            onMouseLeave={e=>e.currentTarget.style.background='var(--card)'}
+            onClick={()=>moveNodeTo(moveModal.nodeId, n.id)}>
+            {n.label}
+          </div>)}
+        </div>
+        <button onClick={()=>setMoveModal(null)} style={{marginTop:12,padding:'8px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'none',cursor:'pointer'}}>取消</button>
       </div>
     </div>}
 
