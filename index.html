@@ -1532,7 +1532,7 @@ function MindPage(){
           onClick={()=>isExpandable&&toggleExpand(node.id)}>
           {isExpandable?(isExp?'▾':'▸'):'•'}
         </span>
-        <span style={{fontSize:14,fontWeight:depth===0?600:depth===1?500:400,flex:1,cursor:'pointer'}}
+        <span style={{fontSize:13,fontWeight:depth===0?600:depth===1?500:400,flex:1,cursor:'pointer',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}
           onClick={()=>{ if(isExpandable)toggleExpand(node.id); setSelected({nodeId:node.id,noteIdx:null}); }}>
           {node.label}
         </span>
@@ -1551,7 +1551,7 @@ function MindPage(){
             onMouseEnter={e=>e.currentTarget.style.background='#edf3fa'}
             onMouseLeave={e=>e.currentTarget.style.background=selected&&selected.nodeId===node.id&&selected.noteIdx===i?'#edf3fa':'transparent'}>
             <span style={{fontSize:11,color:'var(--border)',flexShrink:0}}>📄</span>
-            <span style={{fontSize:13,flex:1}} onClick={()=>setSelected({nodeId:node.id,noteIdx:i})}>{note.title}</span>
+            <span style={{fontSize:12,flex:1,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}} onClick={()=>setSelected({nodeId:node.id,noteIdx:i})}>{note.title}</span>
             <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 4px'}} onClick={()=>openEditNote(node.id,i,note)}>✏️</button>
             <button style={{background:'none',border:'none',fontSize:11,color:'var(--muted)',cursor:'pointer',padding:'2px 4px'}} onClick={()=>deleteNote(node.id,i)}>🗑️</button>
           </div>)}
@@ -1571,7 +1571,7 @@ function MindPage(){
 
   return <div style={{display:'flex',height:'calc(100vh - 52px)',overflow:'hidden'}}>
     {/* Left panel - tree */}
-    <div style={{width:300,flexShrink:0,borderRight:'1px solid var(--border)',overflowY:'auto',padding:'1rem'}}>
+    <div style={{width:360,flexShrink:0,borderRight:'1px solid var(--border)',overflowY:'auto',padding:'1rem'}}>
       <div style={{marginBottom:12}}>
         <input value={search} onChange={e=>setSearch(e.target.value)}
           style={{width:'100%',padding:'7px 10px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'var(--card)',boxSizing:'border-box'}}
