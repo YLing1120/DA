@@ -747,7 +747,7 @@ function ChipMargin(){return <>
     <Card><h3>融券（借股放空）</h3><p>借股票來賣，等跌了再買回還，賺差價。</p><Hl>融券餘額高 + 股價上漲 → 軋空行情，放空的人被迫買回推動股價急漲</Hl></Card>
   </div>
   <Card><h3>融資維持率</h3>
-  <Formula>融資維持率 = 股票市值 ÷ 融資金額 × 100%{'\n'}低於 130% → 收追繳通知 → 48小時未補 → 斷頭</Formula>
+  <Formula>{'融資維持率 = 股票市值 ÷ 融資金額 × 100%\n低於 130% → 收追繳通知 → 48小時未補 → 斷頭'}</Formula>
   <div className="grid2">
     <Ok>股價漲 + 融資減少 → 籌碼轉乾淨，後市可能繼續漲</Ok>
     <Warn>股價漲 + 融資增加 → 散戶追高，風險增加</Warn>
@@ -981,8 +981,7 @@ function TwStockSection(){return <>
   <div className="signal-row"><div className="signal-label">除息日</div><div className="signal-desc">這天買到股票才有資格領息，除息日當天股價會「跳空」下跌約等於股息金額</div></div>
   <div className="signal-row"><div className="signal-label">填息</div><div className="signal-desc">除息後股價漲回除息前水準，代表你真的賺到了股息</div></div>
   <div className="signal-row"><div className="signal-label">貼息</div><div className="signal-desc">除息後股價沒有回升，等於白領股息，總資產反而縮水</div></div>
-  <Formula>殖利率(%) = 現金股利 ÷ 股價 × 100%{'
-'}例：股價100元，配息5元 → 殖利率5%</Formula>
+  <Formula>{'殖利率(%) = 現金股利 ÷ 股價 × 100%\n例：股價100元，配息5元 → 殖利率5%'}</Formula>
   <Warn>⚠️ 追求高殖利率要注意：殖利率高可能是因為股價跌很多，不代表公司體質好</Warn></Card>
 </>}
 
