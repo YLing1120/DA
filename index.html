@@ -1689,6 +1689,935 @@ function MindPage(){
   </div>
 }
 
+
+
+// ══════════════════════════════════════════
+// QUIZ STORAGE UTILS
+// ══════════════════════════════════════════
+function getQuizState(){
+  try{ return JSON.parse(localStorage.getItem('exam_quiz')||'{}'); }catch(e){ return {}; }
+}
+function saveQuizState(s){
+  try{ localStorage.setItem('exam_quiz',JSON.stringify(s)); }catch(e){}
+}
+
+// ══════════════════════════════════════════
+// SHARED EXAM COMPONENTS
+// ══════════════════════════════════════════
+function ChapterHeader({sub,title,freq}){
+  return <div style={{marginBottom:'1.5rem'}}>
+    <div style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--muted)',marginBottom:4}}>投資學 › {sub}</div>
+    <h2 style={{fontSize:'1.5rem',fontWeight:400,marginBottom:6}}>{title}</h2>
+    <div style={{fontSize:13,color:'var(--muted)'}}>考古題出題頻率：{freq}</div>
+  </div>
+}
+
+function ExamCard({children}){return <div className="card" style={{marginBottom:14}}>{children}</div>}
+function ExNote({children}){return <div style={{background:'var(--cream)',borderRadius:8,padding:'12px 14px',margin:'10px 0',fontSize:13,borderLeft:'3px solid var(--gold)'}}>{children}</div>}
+function ExWarn({children}){return <div className="warn">{children}</div>}
+function ExOk({children}){return <div className="ok">{children}</div>}
+function ExHl({children}){return <div className="hl">{children}</div>}
+function ExFormula({children}){return <div className="formula">{children}</div>}
+function CodeBox({children}){return <div className="code-block"><pre>{children}</pre></div>}
+
+function QuizBlock({qid,question,opts,ansIdx,explanation}){
+  const saved=getQuizState();
+  const initChosen = (qid+'_chosen') in saved ? saved[qid+'_chosen'] : null;
+  const [state,setState]=useState({
+    answered: qid in saved,
+    chosen: initChosen,
+    correct: saved[qid]??null,
+  });
+  const answer=(i)=>{
+    if(state.answered) return;
+    const isCorrect=i===ansIdx;
+    const s=getQuizState();
+    s[qid]=isCorrect; s[qid+'_chosen']=i;
+    saveQuizState(s);
+    setState({answered:true,chosen:i,correct:isCorrect});
+  };
+  const reset=()=>{
+    const s=getQuizState();
+    delete s[qid]; delete s[qid+'_chosen'];
+    saveQuizState(s);
+    setState({answered:false,chosen:null,correct:null});
+  };
+  return <div className="quiz-area" style={{marginBottom:10}}>
+    <div className="quiz-q">{question}</div>
+    <div className="quiz-opts">
+      {opts.map((o,i)=><button key={i} disabled={state.answered}
+        className={`quiz-opt${state.answered&&i===ansIdx?' correct':''}${state.answered&&state.chosen===i&&i!==ansIdx?' wrong':''}`}
+        onClick={()=>answer(i)}>{o}</button>)}
+    </div>
+    {state.answered&&<div className={`quiz-feedback ${state.correct?'ok':'no'}`}>
+      {state.correct?'✅ 正確！':'❌ 錯了。'} {explanation}
+    </div>}
+    {state.answered&&<button className="btn" style={{marginTop:6,fontSize:12}} onClick={reset}>重置此題</button>}
+  </div>
+}
+
+// ══════════════════════════════════════════
+// EXAM PAGE
+// ══════════════════════════════════════════
+function ExamPage(){
+  const certs=[{id:'invest',label:'📈 投資學'},{id:'finance2',label:'📊 財務分析'},{id:'law',label:'⚖️ 法規'}];
+  const [cert,setCert]=useState('invest');
+  return <div className="wrap">
+    <div style={{textAlign:'center',padding:'2rem 0 1rem'}}>
+      <div style={{fontFamily:'var(--serif)',fontSize:'1.8rem',fontWeight:400,marginBottom:6}}>高業備考課程</div>
+      <div style={{fontSize:13,color:'var(--muted)'}}>證券商高級業務員 × 對應考古題 × 完整詳解</div>
+    </div>
+    <ExWarn>⚠️ 法規科目的條文數字（天數、金額、人數）請務必對照官方題庫確認，其餘概念說明力求正確。</ExWarn>
+    <div className="sub-nav" style={{marginBottom:'1.5rem',marginTop:'1rem'}}>
+      {certs.map(t=><button key={t.id} className={`sub-btn${cert===t.id?' active':''}`} onClick={()=>setCert(t.id)}>{t.label}</button>)}
+    </div>
+    {cert==='invest'&&<InvestPage/>}
+    {cert==='finance2'&&<div style={{textAlign:'center',padding:'3rem',color:'var(--muted)'}}>財務分析課程建置中…</div>}
+    {cert==='law'&&<div style={{textAlign:'center',padding:'3rem',color:'var(--muted)'}}>法規課程建置中…</div>}
+  </div>
+}
+
+// ══════════════════════════════════════════
+// INVEST PAGE (left nav + right content)
+// ══════════════════════════════════════════
+function InvestPage(){
+  const chapters=[
+    {id:'bond',label:'第1章 債券'},
+    {id:'stock_val',label:'第2章 股票評價'},
+    {id:'tech_analysis',label:'第3章 技術分析'},
+    {id:'portfolio',label:'第4章 投資組合理論'},
+    {id:'capm',label:'第5章 CAPM與效率市場'},
+    {id:'deriv',label:'第6章 衍生性商品'},
+    {id:'macro',label:'第7章 總經與匯率'},
+    {id:'fund',label:'第8章 基金與REITs'},
+    {id:'ethics',label:'第9章 職業道德'},
+  ];
+  const [ch,setCh]=useState('bond');
+  const [qState,setQState]=useState(getQuizState());
+  const refreshQ=()=>setQState(getQuizState());
+  const allKeys=Object.keys(qState).filter(k=>!k.endsWith('_chosen'));
+  const correct=allKeys.filter(k=>qState[k]===true).length;
+  const total=allKeys.length;
+
+  return <div style={{display:'flex',gap:'1.5rem',alignItems:'flex-start'}}>
+    <div style={{width:190,flexShrink:0}}>
+      <div style={{background:'var(--card)',border:'1px solid var(--border)',borderRadius:10,padding:'10px 8px',position:'sticky',top:70}}>
+        <div style={{fontSize:11,fontFamily:'var(--mono)',color:'var(--muted)',padding:'4px 8px',marginBottom:4}}>投資學章節</div>
+        {chapters.map(c=>{
+          const chKeys=Object.keys(qState).filter(k=>k.startsWith(c.id+'_')&&!k.endsWith('_chosen'));
+          const chCorrect=chKeys.filter(k=>qState[k]===true).length;
+          const chTotal=chKeys.length;
+          return <button key={c.id} onClick={()=>{setCh(c.id);refreshQ();}}
+            style={{display:'block',width:'100%',textAlign:'left',padding:'8px 10px',border:'none',borderRadius:6,fontSize:12,cursor:'pointer',marginBottom:2,
+              background:ch===c.id?'var(--blue)':'none',
+              color:ch===c.id?'#fff':'var(--ink)',fontWeight:ch===c.id?500:400}}>
+            <div>{c.label}</div>
+            {chTotal>0&&<div style={{fontSize:10,opacity:.75,marginTop:1}}>{chCorrect}/{chTotal} 答對</div>}
+          </button>;
+        })}
+        {total>0&&<div style={{marginTop:12,padding:'8px 10px',background:'var(--cream)',borderRadius:6,fontSize:11,fontFamily:'var(--mono)'}}>
+          <div style={{color:'var(--muted)',marginBottom:2}}>總體答題</div>
+          <div style={{fontSize:14,fontWeight:600,color:'var(--blue)'}}>{correct}/{total}</div>
+          <div style={{color:'var(--muted)'}}>正確率 {total?Math.round(correct/total*100):0}%</div>
+        </div>}
+      </div>
+    </div>
+    <div style={{flex:1,minWidth:0}}>
+      {ch==='bond'&&<BondChapter onAnswer={refreshQ}/>}
+      {ch==='stock_val'&&<StockValChapter onAnswer={refreshQ}/>}
+      {ch==='tech_analysis'&&<TechChapter onAnswer={refreshQ}/>}
+      {ch==='portfolio'&&<PortfolioChapter onAnswer={refreshQ}/>}
+      {ch==='capm'&&<CAPMChapter onAnswer={refreshQ}/>}
+      {ch==='deriv'&&<DerivChapter onAnswer={refreshQ}/>}
+      {ch==='macro'&&<MacroChapter onAnswer={refreshQ}/>}
+      {ch==='fund'&&<FundChapter onAnswer={refreshQ}/>}
+      {ch==='ethics'&&<EthicsChapter onAnswer={refreshQ}/>}
+    </div>
+  </div>
+}
+
+
+// ══════════════════════════════════════════
+// CH1: 債券（完整版）
+// ══════════════════════════════════════════
+function BondChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第1章" title="債券" freq="⭐⭐⭐⭐⭐ 每次至少5題，計算+概念並重"/>
+
+    <ExamCard><h3>🔑 一、債券基本概念</h3>
+      <p>債券是政府或公司向投資人借錢時發行的「借據」，承諾定期付利息（票息），到期還本金。</p>
+      <ExHl>三個最基本的名詞：<br/>
+        • 面額（Par Value）：到期時還給你的金額，通常 $1,000<br/>
+        • 票面利率（Coupon Rate）：每年付的利息 ÷ 面額<br/>
+        • 到期殖利率（YTM, Yield to Maturity）：持有至到期的年化報酬率，俗稱「債券殖利率」</ExHl>
+      <ExNote>⚠️ 考試常考：「一般俗稱的債券殖利率是指？」→ 到期收益率（YTM）（2023第2次第11題）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📐 二、債券定價公式</h3>
+      <p>債券的合理價格 = 未來所有現金流（票息+面額）折現回今天的現值</p>
+      <ExFormula>{'債券價格 = Σ[C÷(1+r)^t] + F÷(1+r)^n\n\nC = 每期票息，r = 市場殖利率(折現率)\nF = 面額，n = 到期期數'}</ExFormula>
+      <div className="grid2">
+        <ExOk>票面利率 {'>'} 市場殖利率<br/>→ 債券比市場划算 → 溢價（高於面額）</ExOk>
+        <ExWarn>票面利率 {'<'} 市場殖利率<br/>→ 債券比市場差 → 折價（低於面額）</ExWarn>
+      </div>
+      <CodeBox>{`計算範例（2024考古題第9題）：
+1年期債券，面額$10,000，每半年付息，
+債息分別為$300和$500，市場殖利率10%
+
+步驟：年利率10%，半年付息 → 用5%折現
+第1期：300 ÷ 1.05¹ ≈ 285.71
+第2期：10,500 ÷ 1.05² ≈ 9,523.81
+債券價格 ≈ $9,810 ✅`}</CodeBox>
+    </ExamCard>
+
+    <ExamCard><h3>↕️ 三、利率與價格反向關係（必考）</h3>
+      <ExHl>口訣：市場利率升 → 債券價格跌；市場利率降 → 債券價格漲<br/><br/>
+        原因：市場利率漲了，新發行的債券票息更高，舊債券相對不划算 → 舊債券沒人要 → 價格下跌</ExHl>
+      <ExNote>⚠️ 延伸考點（2023第1次第7題）：<br/>
+        「當利率上升時，對債券價格與再投資報酬率之影響？」<br/>
+        答：債券價格下跌，但再投資報酬率上升（票息可以拿去再投資賺更高利率）<br/>
+        這是「利率風險」和「再投資風險」的取捨！</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>⏱️ 四、存續期間（Duration）</h3>
+      <p>衡量債券對利率變動的「敏感度」，數值越大代表利率風險越高。</p>
+      <ExHl>影響存續期間的規律：<br/>
+        • 到期期限越長 → 存續期間越長 → 利率風險越大<br/>
+        • 票面利率越低 → 存續期間越長 → 利率風險越大<br/>
+        • 市場殖利率越高 → 存續期間越短<br/>
+        • 零息債券的存續期間 = 到期期限（因為沒有中途現金流）</ExHl>
+      <ExFormula>{'永續債券存續期間 = (1 + r) ÷ r\n\n例：殖利率5%的永續債券\n存續期間 = 1.05 ÷ 0.05 = 21年（2023第1次第6題）'}</ExFormula>
+      <ExNote>⚠️ 浮動利率債券（FRN）：因為票息隨市場利率調整，存續期間非常短，約等於下次重設票息前的時間（2023第2次第13題）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📊 五、各種債券類型比較（高頻考點）</h3>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{['債券類型','特色','票面利率高低','考試重點'].map(h=><th key={h} style={{background:'var(--cream)',padding:'7px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['可轉換公司債(CB)','持有人有權轉換為股票','低（有轉換權利補償）','轉換價格越低→CB越有價值'],
+          ['可贖回公司債','發行公司有權提前買回','最高（補償投資人被贖回的風險）','利率下降時公司傾向贖回'],
+          ['可賣回公司債','持有人有權提前賣回','低（有賣回權利補償）','利率上升時投資人傾向賣回'],
+          ['附認股權證公司債','附帶購買股票的權利','低（有認股權利補償）','執行認股權→公司淨值增加'],
+          ['零息債券','不付利息，折價發行','N/A','存續期間=到期期限（最長）'],
+          ['浮動利率債券','票息隨市場利率調整','隨市場浮動','存續期間極短'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'7px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top',fontSize:j===3?12:13}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      <ExNote>⚠️ 考試常考：「其他條件相同，哪種債券票面利率最高？」→ 可贖回公司債（2023第2次第1題）<br/>
+        原因：可贖回債券對投資人不利（公司可能在你預期不到的時候把錢還你），所以需要更高利率補償。</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📈 六、利率期限結構三大理論（必考）</h3>
+      <p>解釋為什麼不同到期期限的債券，利率會不一樣（殖利率曲線的形狀成因）</p>
+      <div className="signal-row"><div className="signal-label">預期理論</div><div className="signal-desc">長期利率 = 未來各期短期利率的幾何平均。若預期未來利率上升，殖利率曲線向上傾斜</div></div>
+      <div className="signal-row"><div className="signal-label">市場區隔理論</div><div className="signal-desc">不同到期日的債券市場是相互獨立的，長短期利率互不影響。（2023第1次第29題、2023第2次第12題）</div></div>
+      <div className="signal-row"><div className="signal-label">流動性偏好理論</div><div className="signal-desc">投資人偏好短期債券（流動性較高），所以長期債券需要提供「流動性溢酬」才能吸引人，殖利率曲線通常向上傾斜</div></div>
+      <ExFormula>{'預期理論計算（2023第2次第8題）：\n1年期利率4.8%，2年期利率5.13%\n求1年後的預期1年期利率\n\n(1+5.13%)² = (1+4.8%) × (1+f)\nf = (1.0513)² ÷ 1.048 - 1 ≈ 5.46% ✅'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>🏦 七、貨幣市場工具（短期債務工具）</h3>
+      <p>貨幣市場是指到期日在一年以內的債務工具市場。</p>
+      <div className="signal-row"><div className="signal-label">國庫券(T-Bill)</div><div className="signal-desc">政府發行，最安全，以折價方式發行，不付利息，到期還面額</div></div>
+      <div className="signal-row"><div className="signal-label">商業本票(CP)</div><div className="signal-desc">企業發行的短期票據，用於短期融資，信用風險比國庫券高</div></div>
+      <div className="signal-row"><div className="signal-label">可轉讓定期存單(NCD)</div><div className="signal-desc">銀行發行，可以在次級市場交易轉讓，比一般定存靈活</div></div>
+      <ExHl>貨幣市場工具：國庫券、商業本票、NCD（2023第1次第24題）<br/>
+        非貨幣市場工具：可轉換公司債（到期超過1年）</ExHl>
+      <ExFormula>{'商業本票實質利率計算（2023第1次第28題）：\n90天商業本票，面額1,000萬，成交價995萬，一年365天\n\n利率 = (1,000-995)/995 × (365/90) ≈ 2.04% ✅'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>🏷️ 八、信用評等</h3>
+      <p>信用評等機構（如標準普爾、穆迪、中華信評）對債券發行人的信用品質評分。</p>
+      <ExHl>信用評等越高 → 違約風險越低 → 利率越低<br/>
+        中華信評短期評等（最佳到最差）：twA-1 {'>'} twA-2 {'>'} twA-3 {'>'} twB<br/>（2023第2次第9題）</ExHl>
+      <p>信用評等對投資人的好處：簡易信用風險指標、風險溢酬評估、作為投資組合監控工具</p>
+      <ExNote>⚠️ 當公司債信用評等被「降級」時，該債券的利率會上升（需要更高報酬補償更高的違約風險）</ExNote>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（10題）</SectionLabel>
+    <QuizBlock qid="bond_1" question="其他條件不變，市場利率上升，債券價格會如何？"
+      opts={['上漲','下跌','不變','不一定']} ansIdx={1}
+      explanation="利率升→新債券票息更高→舊債券相對不划算→舊債券價格下跌。最核心的債券概念。"/>
+    <QuizBlock qid="bond_2" question="當利率上升時，對債券價格與再投資報酬率之影響為何？（2023考古題）"
+      opts={['兩者皆上升','債券價格上升，再投資報酬率下跌','兩者皆下跌','債券價格下跌，再投資報酬率上升']} ansIdx={3}
+      explanation="利率上升→債券價格下跌（利率風險），但票息再投資可以賺到更高利率→再投資報酬率上升（再投資收益）。兩者方向相反！"/>
+    <QuizBlock qid="bond_3" question="其他條件相同，以下哪種債券的票面利率最高？（2023考古題）"
+      opts={['可轉換公司債','可贖回公司債','可賣回公司債','附認股權證公司債']} ansIdx={1}
+      explanation="可贖回債券對投資人不利（公司可在任何時候把錢還你，通常在利率下降時），所以需要更高的票面利率補償投資人。"/>
+    <QuizBlock qid="bond_4" question="關於可轉換公司債（CB），下列何者正確？"
+      opts={['持有人可將債券轉換為股票','轉換後仍保留利息權利','轉換價格越低CB價值越低','持有人有義務必須轉換']} ansIdx={0}
+      explanation="CB讓持有人有「權利」（非義務）將債券轉換為股票。轉換後不再有利息。轉換價格越低代表可以用越便宜的價格換到股票，CB越有價值。"/>
+    <QuizBlock qid="bond_5" question="殖利率5%的永續債券，其存續期間為幾年？（2023考古題）"
+      opts={['20年','21年','22年','25年']} ansIdx={1}
+      explanation="永續債券存續期間 = (1+r)÷r = 1.05÷0.05 = 21年。這是固定公式要背起來。"/>
+    <QuizBlock qid="bond_6" question="1年期利率4.8%，2年期利率5.13%，則1年後預期的1年期利率約為？（2023考古題）"
+      opts={['5.02%','5.23%','5.46%','5.51%']} ansIdx={2}
+      explanation="(1.0513)² ÷ 1.048 - 1 ≈ 5.46%。這是預期理論計算遠期利率的公式。"/>
+    <QuizBlock qid="bond_7" question="下列何者屬於貨幣市場工具？（2023考古題）"
+      opts={['可轉換公司債','普通公司債','國庫券','存託憑證']} ansIdx={2}
+      explanation="貨幣市場是到期日一年以內的市場。國庫券、商業本票、NCD都是。可轉換公司債是資本市場工具（到期通常超過1年）。"/>
+    <QuizBlock qid="bond_8" question="在市場區隔理論中，若長期利率下跌，短期利率將？（2023考古題）"
+      opts={['上漲','不受影響','下跌','跟著下跌']} ansIdx={1}
+      explanation="市場區隔理論認為不同到期日的債券市場是獨立的，互不影響。長期利率變動不影響短期利率。"/>
+    <QuizBlock qid="bond_9" question="票面利率3%，市場殖利率5%，債券價格相對面額為？"
+      opts={['溢價（高於面額）','等於面額','折價（低於面額）','無法判斷']} ansIdx={2}
+      explanation="票面利率3% < 市場殖利率5%，這張債券比市場差，沒人願意用面額買，所以折價。這是最基本的定價原則。"/>
+    <QuizBlock qid="bond_10" question="附認股權證公司債之債權人執行認股權利時，公司淨值總額會？（2023考古題）"
+      opts={['減少','不變','增加','增減不一定']} ansIdx={2}
+      explanation="執行認股權→投資人付錢買新股→公司收到資金→淨值（股東權益）增加。這和可轉換公司債不同（CB是把債換成股，不是拿錢買股）。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH2: 股票評價（完整版）
+// ══════════════════════════════════════════
+function StockValChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第2章" title="股票評價" freq="⭐⭐⭐⭐⭐ 計算題最多，公式要熟"/>
+
+    <ExamCard><h3>🔑 一、股票評價的核心邏輯</h3>
+      <p>股票的價值來自未來能拿到的現金。持有股票可以拿到兩種現金：股利 + 未來賣出的價格。評價就是把這些未來現金折現回今天。</p>
+      <ExHl>持有期間報酬率計算（常考）：<br/>
+        報酬率 = (期末股價 - 期初股價 + 股利) ÷ 期初股價<br/><br/>
+        例：以40元買入，1年後股價45元，收到股利2元<br/>
+        報酬率 = (45 - 40 + 2) ÷ 40 = 17.5%</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>📐 二、股利折現模型（DDM）</h3>
+      <h4>① 固定成長模型（Gordon Growth Model）— 最常考</h4>
+      <ExFormula>{'P₀ = D₁ ÷ (r - g)\n\nP₀ = 今天的合理股價\nD₁ = 明年預期股利（下一期）\nr  = 投資人要求報酬率\ng  = 股利永續成長率\n\n⚠️ 使用條件：g 必須小於 r'}</ExFormula>
+      <ExNote>⚠️ 常見陷阱：題目給的是「今年剛發放的股利 D₀」<br/>
+        這時要先算出 D₁ = D₀ × (1 + g)，再代入公式！<br/><br/>
+        考古題（2023第2次第17題）：<br/>
+        「今年剛發放2元現金股利，股利每年固定成長3%，r=10%」<br/>
+        D₁ = 2 × 1.03 = 2.06元<br/>
+        P₀ = 2.06 ÷ (10% - 3%) = 2.06 ÷ 7% ≈ 29.43元 ✅</ExNote>
+      <h4>② 零成長模型</h4>
+      <ExFormula>{'P₀ = D ÷ r（永久固定股利的特例）'}</ExFormula>
+      <h4>③ 多階段成長模型</h4>
+      <CodeBox>{`考古題（2024第1次第12題）：
+未來兩年不配息，第3年配息3元，之後每年成長4%，r=10%
+
+步驟1：算第2年底的股價（Gordon Model）
+P₂ = D₃ ÷ (r-g) = 3 ÷ (10%-4%) = 50元
+
+步驟2：折現回今天
+P₀ = 50 ÷ (1+10%)² = 50 ÷ 1.21 ≈ 41.32元 ✅`}</CodeBox>
+    </ExamCard>
+
+    <ExamCard><h3>📊 三、成長率的計算</h3>
+      <ExFormula>{'永續成長率 g = ROE × 保留盈餘率（1 - 股利發放率）\n\n例（2023第2次第16題）：\n某公司每年將60%盈餘保留再投資，ROE=25%\ng = 25% × 60% = 15%'}</ExFormula>
+      <ExHl>代入Gordon Model的延伸計算（2023第2次第16題）：<br/>
+        今年EPS=$10，股利發放率40% → D₀ = 10×40% = 4元<br/>
+        D₁ = 4 × (1+15%) = 4.6元<br/>
+        r = D₁/P₀ + g = 4.6/184 + 15% = 2.5% + 15% = 17.5% ✅</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>📊 四、本益比法（P/E Ratio）</h3>
+      <ExFormula>{'本益比(P/E) = 股價 ÷ EPS\n合理股價 = EPS × 合理本益比\n\nEPS = 稅後淨利 ÷ 流通在外股數'}</ExFormula>
+      <CodeBox>{`考古題（2024第1次第11題）：
+流通股數100,000，每股市價40元，股利2元，股利發放率40%
+
+EPS = 股利 ÷ 股利發放率 = 2 ÷ 40% = 5元
+P/E = 40 ÷ 5 = 8倍 ✅`}</CodeBox>
+      <ExHl>本益比影響因素：<br/>
+        • 景氣波動大的公司 → 風險高 → 投資人接受較低本益比<br/>
+        • 成長潛力高的公司 → 投資人願意給更高本益比<br/>
+        • 公司治理越好 → 溢價越高</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>🔄 五、可轉換公司債的股票轉換計算</h3>
+      <ExFormula>{'每張CB可轉換股數 = 面額 ÷ 轉換價格\n（每張CB面額通常為100,000元）\n\n考古題（2023第2次第3題）：\n轉換價格25元，每張債券可轉換為\n100,000 ÷ 25 = 4,000股 ✅'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>🌱 六、成長股 vs 價值股</h3>
+      <div className="grid2">
+        <ExHl><strong>成長股特徵：</strong><br/>股利發放率低（留著再投資）<br/>高本益比、高P/B<br/>高ROE、高成長率g</ExHl>
+        <ExOk><strong>價值股特徵：</strong><br/>高股利殖利率<br/>低本益比、低P/B<br/>目前被市場低估</ExOk>
+      </div>
+      <ExNote>⚠️ 考古題（2024第1次第16題）：「哪種股票較可能是成長型？」<br/>
+        → 現金股利占盈餘之百分比偏低（股利發放率低，代表保留更多盈餘再投資）</ExNote>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（8題）</SectionLabel>
+    <QuizBlock qid="sv_1" question="甲公司今年剛發放2元現金股利，股利每年固定成長3%，要求報酬率10%，合理股價為？（2023考古題）"
+      opts={['20元','28.57元','29.43元','30元']} ansIdx={2}
+      explanation="今年剛發D₀=2元，D₁=2×1.03=2.06元，P₀=2.06÷(10%-3%)=2.06÷7%≈29.43元。注意要先算D₁！"/>
+    <QuizBlock qid="sv_2" question="Gordon Model使用的必要條件是？"
+      opts={['g必須大於r','g必須等於r','g必須小於r','g必須等於0']} ansIdx={2}
+      explanation="若g≥r，分母(r-g)≤0，公式無效（股票價格無限大）。股利成長率必須小於要求報酬率才能使用。"/>
+    <QuizBlock qid="sv_3" question="某公司每年將60%盈餘保留再投資，ROE=25%，則永續成長率g為？（2023考古題）"
+      opts={['10%','12%','15%','25%']} ansIdx={2}
+      explanation="g = ROE × 保留盈餘率 = 25% × 60% = 15%。這是計算成長率最常用的公式。"/>
+    <QuizBlock qid="sv_4" question="轉換價格25元的可轉換公司債，每張債券（面額10萬元）可轉換為多少股？（2023考古題）"
+      opts={['1,000股','2,000股','4,000股','10,000股']} ansIdx={2}
+      explanation="100,000÷25=4,000股。每張CB面額通常10萬元，除以轉換價格就是可轉換股數。"/>
+    <QuizBlock qid="sv_5" question="景氣波動大的公司，投資人通常願意接受較低的？（2024考古題）"
+      opts={['標準差','Beta值','本益比','股利發放率']} ansIdx={2}
+      explanation="景氣敏感公司盈餘波動大，風險高，投資人要求更高報酬率，所以願意付的本益比（P/E）較低。"/>
+    <QuizBlock qid="sv_6" question="哪種特徵較可能是成長型股票？（2024考古題）"
+      opts={['高現金股利占盈餘比率','低市價淨值比','現金股利占盈餘百分比偏低','低本益比']} ansIdx={2}
+      explanation="成長型公司傾向保留盈餘再投資，股利發放率低。這樣才能持續高速成長。"/>
+    <QuizBlock qid="sv_7" question="EPS=5元，股利發放率60%，r=10%，g=4%，合理股價為？"
+      opts={['30元','50元','60元','83.3元']} ansIdx={1}
+      explanation="D₁=EPS×發放率=5×60%=3元；P₀=3÷(10%-4%)=3÷6%=50元。注意D₁用的是明年股利。"/>
+    <QuizBlock qid="sv_8" question="以每股70元融資買進股票，1年後以77元賣出，收到股利3元，則持有期間報酬率為？"
+      opts={['10%','12.86%','14.29%','15%']} ansIdx={2}
+      explanation="報酬率=(77-70+3)÷70=10÷70≈14.29%。持有期間報酬包含價差和股利兩部分。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH3: 技術分析（完整版）
+// ══════════════════════════════════════════
+function TechChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第3章" title="技術分析" freq="⭐⭐⭐⭐ 你的股票背景大幅加分，但要注意考試細節"/>
+
+    <ExamCard><h3>🔑 一、技術分析的核心假設</h3>
+      <ExHl>① 市場行為包含一切資訊（價格反映一切）<br/>
+        ② 價格的變化會有趨勢產生<br/>
+        ③ 歷史會重演（圖形型態具參考性）</ExHl>
+      <ExNote>⚠️ 考試最愛考（2023第3次）：<br/>
+        「如果股價報酬率為隨機漫步，使用技術分析才有意義？」→ 錯！隨機漫步代表歷史價格不能預測未來，技術分析無效<br/>
+        「技術分析的重心是預測股票價格的？」→ 變化趨勢（不是確切價格水準）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📈 二、均線系統（移動平均線）</h3>
+      <p>移動平均線（MA）是最基礎的技術指標，代表過去N天的平均收盤價，也代表這段時間買進者的平均成本。</p>
+      <ExHl>均線的功能（2023第3次考古題）：<br/>
+        • 分析成交價及成交量判斷買賣時機<br/>
+        • 利用統計學上移動平均的原理<br/>
+        • 可利用均線間的轉折點及交叉，研判走勢<br/>
+        • 代表不同期間投資人之持股平均成本</ExHl>
+      <div className="grid2">
+        <ExOk>黃金交叉：短期均線由下往上穿越長期均線 → 買進訊號</ExOk>
+        <ExWarn>死亡交叉：短期均線由上往下穿越長期均線 → 賣出訊號</ExWarn>
+      </div>
+    </ExamCard>
+
+    <ExamCard><h3>📉 三、KD指標（隨機指標）</h3>
+      <ExHl>K值 {'>'} 80：超買區，注意回檔<br/>
+        K值 {'<'} 20：超賣區，注意反彈<br/>
+        黃金交叉：K線由下往上穿越D線 → 買進訊號<br/>
+        死亡交叉：K線由上往下穿越D線 → 賣出訊號</ExHl>
+      <ExNote>⚠️ 牛市背離（2024考古題第13題）：<br/>
+        大盤創新低，但「K值」沒創新低 → 下跌動能衰竭，可能反彈<br/>
+        注意：是K值不是RSI，這是常考混淆點！</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📉 四、MACD（移動平均收斂/發散）</h3>
+      <ExFormula>{'DIF（差離值）= EMA12 - EMA26\nDEM/DEA（差離值平均）= DIF的9日均線 ← 實務上採用9日（2023考古題第18題）\nMACD柱狀圖 = DIF - DEM\n\n金叉：DIF往上穿越DEM → 買進\n死叉：DIF往下穿越DEM → 賣出'}</ExFormula>
+      <ExNote>⚠️ 考古題（2023第2次第21題）：<br/>
+        「MACD值大於零時表示熊市？」→ 錯！MACD值大於零表示DIF在DEM上方，是多方訊號（牛市偏多）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📊 五、RSI（相對強弱指標）</h3>
+      <ExFormula>{'RSI = 100 - [100 ÷ (1 + 平均漲幅÷平均跌幅)]\n\nRSI > 70（或80）：超買\nRSI < 30（或20）：超賣\n\n頂背離：股價創新高，RSI沒創新高 → 上漲動能衰退\n底背離：股價創新低，RSI沒創新低 → 下跌動能衰竭'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>📊 六、道氏理論（Dow Theory）</h3>
+      <div className="signal-row"><div className="signal-label">主要趨勢</div><div className="signal-desc">數月到數年的長期走勢，是最重要的，如牛市或熊市</div></div>
+      <div className="signal-row"><div className="signal-label">次要趨勢</div><div className="signal-desc">幾週到幾個月，主要趨勢中的修正回檔（2023第3次考古題）</div></div>
+      <div className="signal-row"><div className="signal-label">短期波動</div><div className="signal-desc">幾天內的隨機漲跌，雜訊居多</div></div>
+      <ExNote>⚠️ 考古題（2023第3次）：次要趨勢是指「依股價長期趨勢線之中短期的波動」</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>🕯️ 七、K線基礎</h3>
+      <ExHl>陽線（紅K）：開低收高，開盤價低於收盤價（2023第2次第19題）<br/>
+        陰線（黑K）：開高收低，開盤價高於收盤價<br/>
+        十字線：開盤價 = 收盤價，多空拉鋸<br/><br/>
+        上影線長：盤中漲高被打下來，上方有賣壓<br/>
+        下影線長：盤中跌深被撐上來，下方有買盤</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>📈 八、葛蘭碧八大法則（2023考古題重點）</h3>
+      <p>均線與股價關係產生的八種買賣訊號，分四買四賣：</p>
+      <div className="grid2">
+        <div><h4>四種買進訊號</h4>
+          <p style={{fontSize:13}}>1. 均線由跌轉平，股價由下往上突破均線<br/>
+          2. 均線仍上升，股價跌破均線後再度回升<br/>
+          3. 股價在均線上方，拉回未跌破均線又上漲<br/>
+          4. 股價跌至均線下方很遠，有機會反彈</p>
+        </div>
+        <div><h4>四種賣出訊號</h4>
+          <p style={{fontSize:13}}>1. 均線由漲轉平，股價由上往下跌破均線<br/>
+          2. 均線仍下跌，股價反彈未突破均線又下跌<br/>
+          3. 股價在均線下方，反彈未到均線又下跌<br/>
+          4. 股價漲至均線上方很遠，有機會回檔</p>
+        </div>
+      </div>
+    </ExamCard>
+
+    <ExamCard><h3>📊 九、費波那契回撤</h3>
+      <ExHl>找到一段漲幅，標出三個關鍵回撤比例：<br/>
+        0.382：強勢整理，多頭仍強<br/>
+        0.5：多空平衡，最常見整理幅度<br/>
+        0.618（黃金比例）：守住多頭格局仍在，跌破轉弱</ExHl>
+      <CodeBox>{`考古題（2023第3次）：
+股票從60元漲到100元
+黃金比例支撐：100 - (100-60)×0.618 = 100-24.72 = 75.28元
+「突破61.8元為賣出訊號」 → 錯！跌破才是賣出訊號`}</CodeBox>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（8題）</SectionLabel>
+    <QuizBlock qid="tech_1" question="技術分析的研究重心在於？"
+      opts={['預測公司未來盈餘','預測股票價格的變化趨勢','分析公司財務報表','評估總體經濟環境']} ansIdx={1}
+      explanation="技術分析著重在趨勢預測，不是精確的未來價格水準。（2024考古題第14題）"/>
+    <QuizBlock qid="tech_2" question="在KD指標中，何者為牛市背離現象？（2024考古題）"
+      opts={['大盤創新低，RSI沒創新低','大盤創新低，DIF沒創新低','大盤創新低，ADX沒創新低','大盤創新低，K值沒創新低']} ansIdx={3}
+      explanation="KD牛市背離：大盤創新低但K值沒創新低，代表下跌動能衰竭。注意是K值不是RSI，這是常見混淆點。"/>
+    <QuizBlock qid="tech_3" question="MACD中計算差離值平均值（DEM/DEA），實務上採用幾天的均線？（2023考古題）"
+      opts={['12日','26日','9日','14日']} ansIdx={2}
+      explanation="DIF=EMA12-EMA26，DEM=DIF的9日均線，MACD柱狀圖=DIF-DEM。9日是固定參數要記住。"/>
+    <QuizBlock qid="tech_4" question="在K線中，陽線（紅K）係指？（2023考古題）"
+      opts={['開高收低之紅K線','開低收高之紅K線','開收同價之十字線','收盤價高於前日收盤價']} ansIdx={1}
+      explanation="陽線（紅K）是開低收高，即收盤價高於開盤價，代表當天多方佔優。"/>
+    <QuizBlock qid="tech_5" question="關於MACD的敘述，下列何者「不正確」？（2023考古題）"
+      opts={['是收斂與發散的移動平均線','用於研判買賣時機','其值大於零時表示熊市','DIF絕對值縮小代表趨勢可能轉折']} ansIdx={2}
+      explanation="MACD值大於零代表DIF在DEM上方，是多方偏強的訊號，不是熊市。這是常見的考題陷阱。"/>
+    <QuizBlock qid="tech_6" question="道氏理論中，次要趨勢是指？（2023考古題）"
+      opts={['股價長期波動趨勢','每日的波動','依股價長期趨勢線之中短期的波動','低點跌破前次低點']} ansIdx={2}
+      explanation="道氏理論：主要趨勢（長期）、次要趨勢（中短期修正）、短期波動（幾天的雜訊）。"/>
+    <QuizBlock qid="tech_7" question="關於移動平均線（MA），下列敘述何者錯誤？（2023考古題）"
+      opts={['分析成交價及成交量判斷買賣時機','利用統計學上移動平均的原理','代表不同期間投資人之持股平均成本','只適用於分析個股，不適用大盤指數']} ansIdx={3}
+      explanation="移動平均線完全可以用於大盤指數分析。選項A、B、C都是均線的正確描述。"/>
+    <QuizBlock qid="tech_8" question="若股票從40元漲到80元，費波那契0.618回撤的支撐位約在？"
+      opts={['55.3元','56.2元','55.3元','58.2元']} ansIdx={1}
+      explanation="支撐位 = 80 - (80-40)×0.618 = 80 - 24.72 = 55.28元 ≈ 55.3元。0.618是黃金比例，最重要的支撐。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH4: 投資組合理論（完整版）
+// ══════════════════════════════════════════
+function PortfolioChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第4章" title="投資組合理論" freq="⭐⭐⭐⭐ Markowitz理論＋夏普比率為核心"/>
+
+    <ExamCard><h3>🔑 一、風險的種類</h3>
+      <div className="grid2">
+        <div><h4>系統風險（市場風險）</h4>
+          <p>整個市場共同面對的風險，如升息、經濟衰退、戰爭。</p>
+          <ExWarn>無法靠分散投資消除，用Beta（β）衡量</ExWarn>
+        </div>
+        <div><h4>非系統風險（個別風險）</h4>
+          <p>單一公司特有的風險，如CEO醜聞、產品召回、工廠失火。</p>
+          <ExOk>可以靠持有多樣化投資組合消除</ExOk>
+        </div>
+      </div>
+      <ExHl>分散投資的效果：<br/>
+        持有越多不相關的股票，非系統風險越低<br/>
+        但系統風險（Beta風險）無論如何都無法消除<br/>
+        當持有股票夠多時，整體風險趨近於市場風險</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>📐 二、投資組合的報酬與風險</h3>
+      <ExFormula>{'組合預期報酬 = w₁×r₁ + w₂×r₂ + ...\n（w=各資產權重，r=各資產預期報酬率）\n\n組合風險受「相關係數」影響：\n相關係數ρ=+1：完全正相關，無分散效果\n相關係數ρ=-1：完全負相關，分散效果最大（可完全消除風險）\n相關係數ρ=0：不相關，部分分散效果'}</ExFormula>
+      <ExHl>關鍵結論：兩資產相關係數越低（甚至負相關），組合的風險降低效果越好<br/>
+        這就是為什麼「不要把雞蛋放在同一個籃子裡」</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>🎯 三、效率前緣（Efficient Frontier）</h3>
+      <p>在所有可能的投資組合中，找出「相同風險下報酬最高」或「相同報酬下風險最低」的組合，連成一條曲線。</p>
+      <ExHl>效率前緣上的組合 = 最佳組合（不能做得更好）<br/>
+        效率前緣下方的組合 = 次優（可以找到風險相同但報酬更高的）<br/>
+        最小變異數組合（MVP）：整個效率前緣中風險最低的那一點</ExHl>
+      <ExNote>⚠️ 加入無風險資產後，最優組合變成「資本市場線（CML）與效率前緣的切點」，稱為市場組合（M）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📈 四、夏普比率（Sharpe Ratio）與CAL</h3>
+      <ExFormula>{'夏普比率 = (E(r) - rf) ÷ σ\n\nE(r) = 投資組合預期報酬率\nrf   = 無風險利率\nσ    = 投資組合標準差（總風險）\n\n夏普比率越高 = 每承擔一單位「總風險」得到的超額報酬越多'}</ExFormula>
+      <CodeBox>{`考古題（2024第1次第19題）：
+最適風險組合：預期報酬6.5%，標準差23%，無風險利率3.5%
+夏普比率（CAL斜率）= (6.5%-3.5%)÷23% = 3%÷23% ≈ 0.13 ✅`}</CodeBox>
+    </ExamCard>
+
+    <ExamCard><h3>📊 五、風險衡量指標比較</h3>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{['指標','衡量什麼','公式','適用情境'].map(h=><th key={h} style={{background:'var(--cream)',padding:'7px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['夏普比率','每單位總風險的超額報酬','(r-rf)÷σ','比較不同基金績效'],
+          ['崔納比率(Treynor)','每單位系統風險的超額報酬','(r-rf)÷Beta','評估分散化組合'],
+          ['詹森Alpha(α)','超額報酬（優於CAPM預期）','r實際 - r理論','評估基金選股能力'],
+          ['Beta（β）','系統風險大小','相對市場的敏感度','衡量個股市場風險'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'7px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top'}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（6題）</SectionLabel>
+    <QuizBlock qid="port_1" question="投資組合中，分散投資可以消除的風險是？"
+      opts={['系統風險','非系統風險','利率風險','Beta風險']} ansIdx={1}
+      explanation="分散投資可以消除非系統風險（個別公司風險）。系統風險（市場風險）無論持有多少股票都無法消除。"/>
+    <QuizBlock qid="port_2" question="兩個資產的相關係數為-1時，代表？"
+      opts={['完全正相關，無分散效果','無相關，部分分散效果','完全負相關，可完全消除非系統風險','風險最高']} ansIdx={2}
+      explanation="相關係數=-1表示完全負相關，一個漲另一個跌，可以完全對沖彼此風險，分散效果最大，理論上可組合出零風險組合。"/>
+    <QuizBlock qid="port_3" question="效率前緣（Efficient Frontier）上的投資組合特徵是？"
+      opts={['預期報酬最高的組合','風險最低的組合','相同風險下報酬最高，或相同報酬下風險最低','無風險的組合']} ansIdx={2}
+      explanation="效率前緣是Pareto最優的組合集合：任何效率前緣外的組合都可以被前緣上的組合所主導（風險更低或報酬更高）。"/>
+    <QuizBlock qid="port_4" question="夏普比率的計算公式是？"
+      opts={['(預期報酬-無風險利率)÷Beta','(預期報酬-無風險利率)÷標準差','預期報酬÷標準差','Beta×市場超額報酬']} ansIdx={1}
+      explanation="夏普比率=(E(r)-rf)÷σ，分母是標準差（總風險），衡量每承擔一單位總風險得到的超額報酬。崔納比率才是用Beta。"/>
+    <QuizBlock qid="port_5" question="Beta=1.5代表？"
+      opts={['該股票比市場風險低50%','與市場完全無關','市場漲1%，該股票預期漲1.5%','標準差是市場的1.5倍']} ansIdx={2}
+      explanation="Beta衡量系統風險相對市場的敏感度。Beta=1.5→市場漲(跌)1%，該股票預期漲(跌)1.5%，比市場波動更大。"/>
+    <QuizBlock qid="port_6" question="詹森Alpha（Jensen's Alpha）大於零代表？"
+      opts={['Beta值大於1','實際報酬高於CAPM預期報酬，有選股能力','標準差很高','系統風險高於市場']} ansIdx={1}
+      explanation="Alpha=實際報酬-CAPM預期報酬。α>0表示基金經理人的選股能力讓組合表現優於理論上應有的報酬，有超額報酬。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH5: CAPM與效率市場（完整版）
+// ══════════════════════════════════════════
+function CAPMChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第5章" title="CAPM與效率市場假說" freq="⭐⭐⭐⭐ 公式計算+概念題並重"/>
+
+    <ExamCard><h3>📐 一、CAPM公式</h3>
+      <ExFormula>{'E(r) = rf + β × [E(rm) - rf]\n\nE(r)     = 股票的要求（期望）報酬率\nrf       = 無風險利率\nβ        = Beta值（系統風險）\nE(rm)    = 市場投資組合預期報酬率\nE(rm)-rf = 市場風險溢酬'}</ExFormula>
+      <CodeBox>{`計算範例：rf=3%，市場報酬=8%，Beta=1.2
+E(r) = 3% + 1.2×(8%-3%) = 3%+6% = 9%
+→ 這支股票至少要給9%報酬才值得投資
+
+逆推Beta（考試常見）：
+若要求報酬11.5%，rf=4%，市場報酬=9%
+Beta = (11.5%-4%)÷(9%-4%) = 7.5%÷5% = 1.5`}</CodeBox>
+    </ExamCard>
+
+    <ExamCard><h3>📈 二、SML vs CML（最常混淆的考點）</h3>
+      <div className="grid2">
+        <ExHl><strong>SML（證券市場線）</strong><br/>x軸：Beta（系統風險）<br/>適用：所有資產<br/>用途：判斷資產是否合理定價</ExHl>
+        <ExOk><strong>CML（資本市場線）</strong><br/>x軸：標準差（總風險）<br/>適用：只適用效率組合<br/>用途：最優投資配置決策</ExOk>
+      </div>
+      <ExNote>⚠️ 資產在SML上方 → 預期報酬高於CAPM合理值 → 被低估 → 應買進<br/>
+        資產在SML下方 → 預期報酬低於合理值 → 被高估 → 應賣出</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>🏛️ 三、效率市場假說（EMH）三種形式</h3>
+      <div className="signal-row"><div className="signal-label">弱式效率</div><div className="signal-desc">股價已反映「所有歷史交易資訊（價格、成交量）」→ 技術分析無法持續獲得超額報酬</div></div>
+      <div className="signal-row"><div className="signal-label">半強式效率</div><div className="signal-desc">股價已反映「所有公開資訊（財報、新聞）」→ 技術分析+基本分析都無效，只有內線消息可能有效</div></div>
+      <div className="signal-row"><div className="signal-label">強式效率</div><div className="signal-desc">股價已反映「所有資訊含內線消息」→ 任何分析都無效，連內線消息都無用</div></div>
+      <ExNote>⚠️ 考試常考：「在半強式效率市場下，哪種方式無法持續獲超額報酬？」<br/>
+        → 技術分析和基本分析都無法（兩個都答才完整）<br/>
+        → 只有利用內線消息理論上才可能有效（但那是違法的）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📊 四、Alpha值（超額報酬）</h3>
+      <ExFormula>{'Alpha（α）= 實際報酬 - CAPM預期報酬\n\nα > 0：超額報酬，表現優於預期（有選股能力）\nα = 0：符合市場合理報酬\nα < 0：表現不如預期'}</ExFormula>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（6題）</SectionLabel>
+    <QuizBlock qid="capm_1" question="rf=4%，市場報酬=9%，Beta=1.5，CAPM要求報酬率為？（2024考古題）"
+      opts={['9.5%','11.5%','13%','15.5%']} ansIdx={1}
+      explanation="E(r)=4%+1.5×(9%-4%)=4%+7.5%=11.5%。市場風險溢酬=(9%-4%)=5%，乘Beta=1.5。"/>
+    <QuizBlock qid="capm_2" question="描述預期報酬率與Beta值關係的線稱為？（2024考古題）"
+      opts={['資本市場線(CML)','效率前緣','證券市場線(SML)','資本配置線(CAL)']} ansIdx={2}
+      explanation="SML（Security Market Line）x軸是Beta，描述CAPM的預期報酬率與系統風險的線性關係，適用所有資產。"/>
+    <QuizBlock qid="capm_3" question="在半強式效率市場下，下列何種分析無法持續獲得超額報酬？（2024考古題）"
+      opts={['利用內線消息','技術分析','基本分析','技術分析和基本分析都無法']} ansIdx={3}
+      explanation="半強式：所有公開資訊已反映，技術分析（依賴歷史價格）和基本分析（依賴公開財報）都無效。只有內線消息（非公開）理論上仍有效，但那是違法的。"/>
+    <QuizBlock qid="capm_4" question="Alpha值大於零代表？"
+      opts={['Beta大於1','實際報酬高於CAPM預期，有超額報酬','標準差很高','系統風險高於市場']} ansIdx={1}
+      explanation="Alpha=實際報酬-CAPM預期報酬。α>0代表這支股票或基金的表現超過了其系統風險所應得的合理報酬，有選股超額能力。"/>
+    <QuizBlock qid="capm_5" question="SML和CML最大的差別是？"
+      opts={['SML用標準差，CML用Beta','SML用Beta，CML用標準差','兩者完全相同','SML只適用股票，CML只適用債券']} ansIdx={1}
+      explanation="SML的x軸是Beta（系統風險），適用所有資產。CML的x軸是標準差（總風險），只適用效率組合（市場組合的各種比例配置）。"/>
+    <QuizBlock qid="capm_6" question="根據CAPM，一個公平定價的證券之Beta係數？"
+      opts={['必須為正','必須為負','必須為零','可以為正、負或零']} ansIdx={3}
+      explanation="CAPM中Beta可以是任意值：正Beta（與市場同向）、負Beta（與市場反向，如防禦性資產）、零Beta（無系統風險）都可以被公平定價。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH6: 衍生性商品（完整版）
+// ══════════════════════════════════════════
+function DerivChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第6章" title="衍生性商品" freq="⭐⭐⭐⭐⭐ 選擇權概念+計算最難，每次必考"/>
+
+    <ExamCard><h3>🔑 一、衍生性商品總覽</h3>
+      <div className="signal-row"><div className="signal-label">選擇權</div><div className="signal-desc">買方花錢取得「權利」（非義務），可選擇在到期前以約定價格買/賣標的資產</div></div>
+      <div className="signal-row"><div className="signal-label">期貨</div><div className="signal-desc">雙方約定在未來某日以今天議定的價格交易，雙方都有義務履行</div></div>
+      <div className="signal-row"><div className="signal-label">權證</div><div className="signal-desc">由券商發行的選擇權，在交易所掛牌交易，分認購權證（看漲）和認售權證（看跌）</div></div>
+      <div className="signal-row"><div className="signal-label">ETN</div><div className="signal-desc">指數投資證券，由券商發行，追蹤指數，理論上無追蹤誤差（但有信用風險）</div></div>
+    </ExamCard>
+
+    <ExamCard><h3>📐 二、選擇權四大部位（必背）</h3>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{['部位','看法','最大損失','最大獲利'].map(h=><th key={h} style={{background:'var(--cream)',padding:'7px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['買進買權(Long Call)','看漲','權利金','無限大（標的越漲獲利越多）'],
+          ['賣出買權(Short Call)','看跌/中立','無限大','權利金（最多賺到權利金）'],
+          ['買進賣權(Long Put)','看跌','權利金','履約價-權利金（標的跌到0時最大）'],
+          ['賣出賣權(Short Put)','看漲/中立','履約價-權利金','權利金'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'7px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top'}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      <ExNote>⚠️ 考試最愛考：「選擇權買方一定要執行？」→ 錯！買方有權利但沒有義務執行<br/>
+        「哪種部位損失無限大？」→ 賣出買權（Short Call），因為標的可能漲到無限大</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📊 三、選擇權價值組成與影響因素</h3>
+      <ExFormula>{'選擇權價值 = 內含價值 + 時間價值\n\n買權內含價值 = max(S-K, 0)  S=標的價格，K=履約價\n賣權內含價值 = max(K-S, 0)\n\n時間價值：到期前還有變動的可能，隨到期日接近而遞減'}</ExFormula>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,marginTop:10}}>
+        <thead><tr>{['因素','買權(Call)','賣權(Put)'].map(h=><th key={h} style={{background:'var(--cream)',padding:'6px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['標的價格上漲','↑增加','↓減少'],
+          ['履約價格上漲','↓減少','↑增加'],
+          ['到期時間越長','↑增加','↑增加'],
+          ['波動率越大','↑增加','↑增加（最重要！）'],
+          ['無風險利率上升','↑增加','↓減少'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'6px 10px',borderBottom:'1px solid var(--border)'}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      <ExOk>波動率越大，買權和賣權都增加！因為波動越大，選擇權被執行的機會更大，對買方越有利</ExOk>
+    </ExamCard>
+
+    <ExamCard><h3>📈 四、美式 vs 歐式選擇權</h3>
+      <div className="grid2">
+        <ExHl><strong>美式選擇權：</strong><br/>到期日「前」任何時間都可以執行<br/>台灣個股選擇權屬於美式</ExHl>
+        <ExOk><strong>歐式選擇權：</strong><br/>只能在「到期日當天」執行<br/>台灣指數選擇權（台指選）屬於歐式</ExOk>
+      </div>
+      <ExNote>⚠️ 考古題（2023第3次）：「投資人在選擇權履約日期到期前皆可行使認購權利，稱為何種選擇權？」→ 美式選擇權</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📊 五、ETN vs ETF 比較（2023考古題第2題）</h3>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{['比較項目','ETF','ETN'].map(h=><th key={h} style={{background:'var(--cream)',padding:'7px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['發行人','投信（基金公司）','券商'],
+          ['追蹤誤差','有（因為持有實際資產）','理論上無（直接承諾報酬）'],
+          ['風險','資產風險','信用風險（券商倒閉風險）'],
+          ['申購贖回','可用實物或現金','只能用現金'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'7px 10px',borderBottom:'1px solid var(--border)'}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      <ExNote>⚠️ 考古題陷阱（2023第2次第2題）：「ETN可以用實物或現金申購贖回」→ 錯！ETN只能用現金，ETF才可以實物申購贖回</ExNote>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（8題）</SectionLabel>
+    <QuizBlock qid="deriv_1" question="買進買權（Long Call）的最大損失是？"
+      opts={['無限大','履約價格','所支付的權利金','標的資產現價']} ansIdx={2}
+      explanation="買方最大損失是付出的權利金。若標的大跌，買方選擇不執行，損失只有一開始支付的權利金。"/>
+    <QuizBlock qid="deriv_2" question="賣出買權（Short Call）的最大損失是？"
+      opts={['所收取的權利金','履約價格','無限大（標的越漲損失越大）','履約價減去權利金']} ansIdx={2}
+      explanation="賣出買權的損失無上限，因為標的價格理論上可以漲到無限大，每漲1元賣方就多虧1元。這是風險最大的部位。"/>
+    <QuizBlock qid="deriv_3" question="投資人看跌某股票，最適合的選擇權策略是？"
+      opts={['買進買權','賣出買權','買進賣權','賣出賣權']} ansIdx={2}
+      explanation="看跌→買賣權（Long Put）：標的跌→賣權內含價值增加→獲利。最大損失只是權利金，獲利潛力大。"/>
+    <QuizBlock qid="deriv_4" question="其他條件不變，標的資產波動率增加，對買權和賣權的影響？"
+      opts={['買權增加，賣權減少','買權減少，賣權增加','買權和賣權都增加','買權和賣權都減少']} ansIdx={2}
+      explanation="波動率增加讓選擇權被有利執行的機會更大，買方受益。因此買權和賣權的價值都增加。"/>
+    <QuizBlock qid="deriv_5" question="歐式選擇權的特色是？（2023考古題）"
+      opts={['到期前任何時間都可以執行','只能在到期日當天執行','只有歐洲市場才有','比美式選擇權貴']} ansIdx={1}
+      explanation="歐式選擇權只能在合約到期日當天行使，美式選擇權則可以在到期日「前」任何時間行使。台灣台指選是歐式。"/>
+    <QuizBlock qid="deriv_6" question="關於ETN，下列敘述何者有誤？（2023考古題）"
+      opts={['由券商發行','理論上沒有追蹤誤差','可以用實物或現金申購贖回','有信用風險']} ansIdx={2}
+      explanation="ETN只能用現金申購贖回，不能實物交割。ETF才可以實物申購贖回（把一籃子股票換ETF份額）。這是2023考古題的陷阱。"/>
+    <QuizBlock qid="deriv_7" question="買進賣權（Long Put）在何種情況下獲利？"
+      opts={['標的價格上漲超過履約價','標的價格下跌低於履約價','標的價格不變','無論如何都獲利']} ansIdx={1}
+      explanation="買進賣權看跌。當標的價格跌到履約價以下，賣權有內含價值，下跌越多獲利越多（最大獲利=履約價-權利金）。"/>
+    <QuizBlock qid="deriv_8" question="選擇權的時間價值特性是？"
+      opts={['隨到期日接近而增加','隨到期日接近而遞減至零','與到期日無關','在到期日當天最大']} ansIdx={1}
+      explanation="時間價值代表「到期前還有變動可能」的溢價。隨著到期日越近，這個可能性越小，時間價值越低，到期日當天歸零。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH7: 總經與匯率（完整版）
+// ══════════════════════════════════════════
+function MacroChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第7章" title="總體經濟與匯率" freq="⭐⭐⭐⭐ 概念題+計算題並重"/>
+
+    <ExamCard><h3>🔑 一、貨幣供給定義（2023考古題重點）</h3>
+      <div className="signal-row"><div className="signal-label">M1a</div><div className="signal-desc">通貨淨額 + 活期存款（最流動的貨幣）</div></div>
+      <div className="signal-row"><div className="signal-label">M1b</div><div className="signal-desc">M1a + 活期儲蓄存款（台灣最常用指標）</div></div>
+      <div className="signal-row"><div className="signal-label">M2</div><div className="signal-desc">M1b + 準貨幣（定期存款、外幣存款等）</div></div>
+      <ExNote>⚠️ 考古題（2023第2次第22題）：「支票存款大幅增加，哪種貨幣供給額增加？」<br/>
+        支票存款屬於活期存款 → M1a增加 → M1b（含M1a）增加 → M2（含M1b）也增加<br/>
+        → M1a、M1b、M2皆增加 ✅</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>🏦 二、央行政策工具（2023考古題）</h3>
+      <div className="signal-row"><div className="signal-label">公開市場操作</div><div className="signal-desc">買入公債→資金流入市場→降息效果；賣出公債→資金收回→升息效果</div></div>
+      <div className="signal-row"><div className="signal-label">存款準備率</div><div className="signal-desc">調高→銀行可貸款金額減少→貨幣供給收縮；調低→相反</div></div>
+      <div className="signal-row"><div className="signal-label">重貼現率</div><div className="signal-desc">銀行向央行借錢的利率。調高→銀行借款成本增加→市場利率上升</div></div>
+      <ExFormula>{'貨幣乘數 = 1 ÷ 存款準備率\n\n例：存款準備率10%，貨幣乘數 = 1÷10% = 10倍\n即每增加1元基礎貨幣，可產生10元的貨幣供給'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>📊 三、景氣指標（2023考古題）</h3>
+      <div className="signal-row"><div className="signal-label">領先指標</div><div className="signal-desc">先於景氣變動，可預測未來景氣。「預測股價變動較具參考價值的景氣指標」（2023考古題）</div></div>
+      <div className="signal-row"><div className="signal-label">同時指標</div><div className="signal-desc">與景氣同步變動，反映當前景氣</div></div>
+      <div className="signal-row"><div className="signal-label">落後指標</div><div className="signal-desc">落後於景氣變動，用來確認景氣是否真的反轉</div></div>
+      <ExNote>⚠️ 考試常考：「預測股價變動較具參考的景氣指標是？」→ 領先指標</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>💱 四、匯率基礎</h3>
+      <ExHl>直接報價：1單位外幣=多少本幣（台灣常用）<br/>
+        例：USD/TWD = 31，即1美元換31台幣<br/><br/>
+        本幣升值（匯率數字下降）：進口商受益，出口商受損<br/>
+        本幣貶值（匯率數字上升）：出口商受益，進口商受損</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>📐 五、利率平價與購買力平價</h3>
+      <ExFormula>{'購買力平價(PPP)：高通膨國家貨幣預期貶值\n\n利率平價(IRP)：高利率國家貨幣預期貶值\n（高利率吸引資金，但預期貶值來抵銷）\n\n考古題（2024第1次第17題）：\n甲國預期通膨高於乙國 → 甲國貨幣將貶值 ✅'}</ExFormula>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（6題）</SectionLabel>
+    <QuizBlock qid="macro_1" question="支票存款大幅增加，會促使哪種貨幣供給額增加？（2023考古題）"
+      opts={['僅M1a','僅M1b','僅M1a與M1b','M1a、M1b與M2皆增加']} ansIdx={3}
+      explanation="支票存款=活期存款→M1a增加。M1b包含M1a，M2包含M1b，所以三者都增加。"/>
+    <QuizBlock qid="macro_2" question="預測股價變動較具參考價值的景氣指標是？（2023考古題）"
+      opts={['領先指標','同時指標','落後指標','景氣對策信號']} ansIdx={0}
+      explanation="領先指標先於景氣變動，可以預測未來景氣走向，因此對預測股價最有參考價值。"/>
+    <QuizBlock qid="macro_3" question="央行採取「公開市場操作」買入公債，其效果是？"
+      opts={['收縮貨幣供給，升息','擴張貨幣供給，降息','不影響貨幣供給','只影響股市']} ansIdx={1}
+      explanation="央行買入公債→付出資金→市場資金增加→貨幣供給擴張→利率下降。賣出公債則相反（收縮）。"/>
+    <QuizBlock qid="macro_4" question="甲國預期通貨膨脹高於乙國，甲國貨幣將？（2024考古題）"
+      opts={['升值','貶值','不變','先升後貶']} ansIdx={1}
+      explanation="購買力平價(PPP)：高通膨→購買力下降→貨幣貶值。這是最基本的匯率決定理論。"/>
+    <QuizBlock qid="macro_5" question="台幣升值對哪類公司最不利？"
+      opts={['進口原物料為主的公司','以出口為主的科技公司','主要業務在台灣的金融公司','台幣計價的房地產公司']} ansIdx={1}
+      explanation="台幣升值→出口商外幣收入換回台幣時減少→獲利下降。台灣半導體、科技出口商（如台積電供應商）受影響最大。"/>
+    <QuizBlock qid="macro_6" question="存款準備率調高，對貨幣供給的影響是？"
+      opts={['貨幣供給增加，利率下降','貨幣供給減少，利率上升','不影響貨幣供給','只影響基礎貨幣']} ansIdx={1}
+      explanation="存款準備率調高→銀行可以放貸的資金比例減少→貨幣乘數降低→貨幣供給收縮→市場資金減少→利率上升。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH8: 基金與REITs（完整版）
+// ══════════════════════════════════════════
+function FundChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第8章" title="基金、REITs與其他金融商品" freq="⭐⭐⭐ 概念題為主，細節要注意"/>
+
+    <ExamCard><h3>🔑 一、基金的種類比較</h3>
+      <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+        <thead><tr>{['種類','特色','交易方式','價格決定'].map(h=><th key={h} style={{background:'var(--cream)',padding:'7px 10px',textAlign:'left',fontSize:12,fontWeight:500,color:'var(--muted)'}}>{h}</th>)}</tr></thead>
+        <tbody>{[
+          ['開放型基金','可隨時申購贖回','向基金公司直接交易','淨值（NAV）'],
+          ['封閉型基金','固定份數','在交易所買賣','市價（可能溢/折價）'],
+          ['ETF','結合兩者優點','交易所買賣+可申購贖回','市價（接近NAV，有套利機制）'],
+          ['ETN','券商發行，追蹤指數','交易所買賣','市價'],
+        ].map((r,i)=><tr key={i}>{r.map((cell,j)=><td key={j} style={{padding:'7px 10px',borderBottom:'1px solid var(--border)',verticalAlign:'top'}}>{cell}</td>)}</tr>)}</tbody>
+      </table>
+      <ExNote>⚠️ ETF可以實物申購贖回（把一籃子股票換ETF份額），ETN只能用現金，這是2023考古題的陷阱題！</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📐 二、淨值（NAV）計算</h3>
+      <ExFormula>{'NAV = (基金總資產 - 負債) ÷ 流通單位數\n\n開放型基金：申購贖回都以NAV計算\n封閉型基金：\n  市價 > NAV = 溢價（Premium）\n  市價 < NAV = 折價（Discount）'}</ExFormula>
+    </ExamCard>
+
+    <ExamCard><h3>🏢 三、REITs（不動產投資信託）</h3>
+      <ExHl>REITs的主要特點：<br/>
+        • 需將大部分收益（通常90%以上）以股利方式分配給投資人<br/>
+        • 殖利率通常較高，適合需要現金流的投資人<br/>
+        • 利率上升時，REITs通常表現較差（借貸成本升、折現率升）<br/>
+        • 在台灣，REITs交易免徵證券交易稅（2023考古題第10題）</ExHl>
+      <ExNote>⚠️ 考古題（2023第2次第10題）：「哪項新金融商品免徵交易稅？」→ 不動產投資信託（REITs）</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>💼 四、避險基金（Hedge Fund）</h3>
+      <ExHl>避險基金特色：<br/>
+        • 主要針對「法人機構」和「高淨值個人」，非一般散戶<br/>
+        • 使用衍生性商品、槓桿、放空等複雜策略<br/>
+        • 流動性較差，有鎖定期（Lock-up period）<br/>
+        • 費用高：通常管理費2% + 績效費20%（2-and-20）</ExHl>
+    </ExamCard>
+
+    <ExamCard><h3>💰 五、短期票券課稅（2023考古題）</h3>
+      <ExHl>個人買賣短期票券（商業本票、國庫券等）利息所得：<br/>
+        → 採「分離課稅」方式（2023第2次第6題）<br/>
+        → 不需併入綜合所得稅計算<br/>
+        → 稅率固定（目前為10%）</ExHl>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（6題）</SectionLabel>
+    <QuizBlock qid="fund_1" question="關於ETN和ETF的比較，下列何者有誤？（2023考古題）"
+      opts={['兩者都追蹤標的指數','ETN理論上沒有追蹤誤差，ETF有','ETN由券商發行，ETF由投信發行','ETN可以用實物或現金申購贖回']} ansIdx={3}
+      explanation="ETN只能用現金申購贖回，不能實物交割。ETF才可以實物申購贖回（一籃子股票換ETF份額）。這是2023考古題的陷阱。"/>
+    <QuizBlock qid="fund_2" question="個人買賣短期票券的利息所得，課稅方式是？（2023考古題）"
+      opts={['併入綜合所得稅計算','免稅','分離課稅','併入營利事業所得稅']} ansIdx={2}
+      explanation="短期票券利息所得採分離課稅，不需要與其他所得合併申報，稅率固定，對高所得者較有利。"/>
+    <QuizBlock qid="fund_3" question="哪項金融商品在台灣免徵證券交易稅？（2023考古題）"
+      opts={['臺指期貨','臺指選擇權','認購權證','不動產投資信託(REITs)']} ansIdx={3}
+      explanation="REITs（不動產投資信託）在台灣免徵證券交易稅（0.3%），但買賣仍需支付手續費。"/>
+    <QuizBlock qid="fund_4" question="封閉型基金市價低於NAV，稱為？"
+      opts={['溢價（Premium）','折價（Discount）','平價','NAV偏差']} ansIdx={1}
+      explanation="市價<NAV稱為折價（Discount），市價>NAV稱為溢價（Premium）。封閉型基金常以折價交易是市場常見現象。"/>
+    <QuizBlock qid="fund_5" question="創業投資（VC）通常投資於哪個階段？（2024考古題）"
+      opts={['穩定營運的擴張期','具成長潛力的草創期','市場已成熟的穩定期','準備IPO的pre-IPO期']} ansIdx={1}
+      explanation="創投（VC）投資早期草創期公司，風險最高但潛在報酬最高。私募股權（PE）則多投資成熟期公司。"/>
+    <QuizBlock qid="fund_6" question="避險基金與一般共同基金最大的不同？"
+      opts={['避險基金一定能獲利','避險基金主要面向機構投資人，可使用槓桿放空等複雜策略','避險基金費用比共同基金低','避險基金不能投資股票']} ansIdx={1}
+      explanation="避險基金主要針對法人和高淨值個人，可使用衍生性商品、槓桿、放空等複雜策略，流動性較差，費用高（2-and-20）。"/>
+  </>
+}
+
+// ══════════════════════════════════════════
+// CH9: 職業道德（完整版）
+// ══════════════════════════════════════════
+function EthicsChapter({onAnswer}){
+  return <>
+    <ChapterHeader sub="第9章" title="職業道德與法規基礎" freq="⭐⭐⭐ 記憶題，法規數字需對照官方題庫"/>
+
+    <div style={{background:'#fef8ec',border:'1px solid #e8d9a0',borderRadius:8,padding:'12px',marginBottom:'1rem',fontSize:13,color:'#5a4010'}}>
+      ⚠️ 本章法規的具體數字（刑期、罰款、天數、比例等）請務必對照官方最新題庫確認，法規可能隨時修訂。
+    </div>
+
+    <ExamCard><h3>🔑 一、內線交易（高頻必考）</h3>
+      <ExHl>構成內線交易的三要件：<br/>
+        ① 具有特定身分（公司內部人或消息受領人）<br/>
+        ② 知悉「重大」且「未公開」的消息<br/>
+        ③ 在消息公開前，買賣該公司有價證券</ExHl>
+      <ExNote>⚠️ 重要考點：<br/>
+        • 即使「沒有獲利」甚至「虧損」，只要符合三要件就構成內線交易<br/>
+        • 「重大消息」包括：合併收購、重大財務資訊、重大契約、重大訴訟等<br/>
+        • 消息受領人（從內部人得知消息者）也需承擔法律責任</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>📋 二、操縱市場的常見手法</h3>
+      <div className="signal-row"><div className="signal-label">連續買賣</div><div className="signal-desc">大量連續買賣同一股票，製造交易熱絡假象，影響他人判斷</div></div>
+      <div className="signal-row"><div className="signal-label">相對委託</div><div className="signal-desc">自己同時下買單和賣單（自買自賣），製造假成交量</div></div>
+      <div className="signal-row"><div className="signal-label">散布謠言</div><div className="signal-desc">散布不實或誤導性消息影響股價</div></div>
+      <div className="signal-row"><div className="signal-label">洗售</div><div className="signal-desc">與特定人相互對倒，製造交易活絡假象</div></div>
+    </ExamCard>
+
+    <ExamCard><h3>👔 三、從業人員的法定義務</h3>
+      <div className="signal-row"><div className="signal-label">忠實義務</div><div className="signal-desc">以客戶最佳利益為優先，不得以自身或第三人利益損害客戶</div></div>
+      <div className="signal-row"><div className="signal-label">保密義務</div><div className="signal-desc">不得洩露客戶資料、交易資訊及其他機密</div></div>
+      <div className="signal-row"><div className="signal-label">迴避義務</div><div className="signal-desc">有利益衝突時應迴避，不得利用職務之便為自己獲利</div></div>
+      <div className="signal-row"><div className="signal-label">申報義務</div><div className="signal-desc">持有公司股票達一定比例或特定交易需申報</div></div>
+      <ExNote>⚠️ 搶先交易（Front Running）：從業人員知道客戶即將大量買進，自己先行買進，屬於嚴重違反忠實義務的行為</ExNote>
+    </ExamCard>
+
+    <ExamCard><h3>🏛️ 四、主管機關與自律機構</h3>
+      <div className="signal-row"><div className="signal-label">金管會</div><div className="signal-desc">最高金融監理機關，負責銀行、證券、期貨、保險的法規制訂與監督</div></div>
+      <div className="signal-row"><div className="signal-label">台灣證券交易所(TWSE)</div><div className="signal-desc">管理上市公司交易，集中市場（主板）</div></div>
+      <div className="signal-row"><div className="signal-label">證券櫃檯買賣中心(TPEx)</div><div className="signal-desc">管理上櫃公司交易，店頭市場</div></div>
+      <div className="signal-row"><div className="signal-label">中華民國證券商業同業公會</div><div className="signal-desc">證券商的自律機構，制訂從業人員行為規範</div></div>
+    </ExamCard>
+
+    <SectionLabel>章節測驗（6題）</SectionLabel>
+    <QuizBlock qid="eth_1" question="構成內線交易的必要條件，下列哪項「不」包含其中？"
+      opts={['具有特定身分（內部人）','知悉重大未公開消息','消息公開前買賣股票','獲得超額報酬']} ansIdx={3}
+      explanation="內線交易三要件：特定身分+重大未公開消息+消息公開前買賣。即使沒有獲利（甚至虧損），只要符合前三點就構成內線交易，不需要實際獲利。"/>
+    <QuizBlock qid="eth_2" question="證券從業人員的忠實義務是指？"
+      opts={['以公司利潤最大化為優先','以客戶最佳利益為優先','優先服務資產規模較大的客戶','忠於所屬證券公司的指示']} ansIdx={1}
+      explanation="忠實義務（Fiduciary Duty）要求從業人員將客戶利益置於自身和公司利益之上，是最基本且最重要的職業道德要求。"/>
+    <QuizBlock qid="eth_3" question="以下哪個行為屬於操縱市場？"
+      opts={['依據公開資訊分析後買賣股票','自己同時下買單和賣單製造假成交量','在股價下跌時停損賣出','根據技術分析買進後賣出']} ansIdx={1}
+      explanation="相對委託（自買自賣）製造虛假交易量，讓市場誤以為交易熱絡，誤導其他投資人，屬於操縱市場。"/>
+    <QuizBlock qid="eth_4" question="台灣金融市場的最高監理機關是？"
+      opts={['中央銀行','財政部','金融監督管理委員會（金管會）','台灣證券交易所']} ansIdx={2}
+      explanation="金管會是台灣最高金融監理機關，負責銀行、證券、期貨、保險業的法規制訂與監督執行。台灣證交所是交易所，不是監理機關。"/>
+    <QuizBlock qid="eth_5" question="從業人員知道客戶即將大量買進某股票，先行為自己買進，此行為稱為？"
+      opts={['內線交易','搶先交易（Front Running），違反忠實義務','套利交易','合法的自營業務']} ansIdx={1}
+      explanation="搶先交易（Front Running）是利用客戶委託資訊先行為自己獲利，嚴重違反忠實義務，也可能觸犯證券交易法。"/>
+    <QuizBlock qid="eth_6" question="關於ESG（環境、社會、公司治理）相關業務，下列哪項屬於證券期貨業應辦理的事項？（2023考古題）"
+      opts={['定期評估核心營運系統確保持續運營並提報董事會','直接承諾碳中和','禁止所有高碳排產業融資','強制客戶投資綠色基金']} ansIdx={0}
+      explanation="根據金管會規定，證券期貨業應定期評估核心營運系統及設備，確保營運持續、韌性，並提報董事會。這是ESG中公司治理（G）的要求。"/>
+  </>
+}
+
 // ── Lab Page ──
 const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const RC=arr=>arr[Math.floor(Math.random()*arr.length)];
@@ -1968,7 +2897,7 @@ function FloatingNote({userNotes, onSave}){
 // ═══════════════════════════════════════════
 // APP
 // ═══════════════════════════════════════════
-const TABS=[{id:'lab',label:'實作 Lab'},{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'mind',label:'知識地圖'},{id:'finance',label:'財商知識'},{id:'tracker',label:'學習追蹤'}];
+const TABS=[{id:'lab',label:'實作 Lab'},{id:'learn',label:'學習筆記'},{id:'stock',label:'股票學習'},{id:'mind',label:'知識地圖'},{id:'finance',label:'財商知識'},{id:'exam',label:'金融證照'},{id:'tracker',label:'學習追蹤'}];
 
 function App(){
   const [tab,setTab]=useState(()=>LS.get('da_current_tab')||'learn');
@@ -1996,6 +2925,7 @@ function App(){
       </div>
     </nav>
     {tab==='lab'&&<LabPage/>}
+    {tab==='exam'&&<ExamPage/>}
     {tab==='mind'&&<MindPage/>}
     {tab==='learn'&&<LearnPage/>}
     {tab==='stock'&&<StockPage/>}
