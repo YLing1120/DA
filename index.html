@@ -252,8 +252,8 @@ const STRATEGY_NOTES=[
   {id:'s13',cat:'special',title:'處置股注意',body:'三天第一款：漲跌幅過大被關注\n連續5天注意股：持續異常\n\n操作：進入處置後 → 拉回找買點\n⚠️ 流動性差、買賣價差大'},
 ];
 
-const CAT_LABELS={strategy:'📋 選股策略',operation:'📊 盤中盤後操作',special:'⚡ 特殊事件',other:'其他'};
-const CAT_CLASS={strategy:'cat-flow',operation:'cat-chipread',special:'cat-entry',other:'cat-other'};
+const CAT_LABELS={stock:'📈 股票操作',finance:'💡 財商理財',data:'📊 數據分析',exam:'🎓 金融證照',other:'其他'};
+const CAT_CLASS={stock:'cat-flow',finance:'cat-entry',data:'cat-select',exam:'cat-chipread',other:'cat-other'};
 
 // ═══════════════════════════════════════════
 // STORAGE UTILS
@@ -834,7 +834,7 @@ function NotesPage({userNotes, onSave}){
   };
   const del=(id)=>{if(confirm('確定刪除？'))save(userNotes.filter(n=>n.id!==id))};
 
-  const allCats=['all','strategy','operation','special','other'];
+  const allCats=['all','stock','finance','data','exam','other'];
   const catLabels={all:'全部',...CAT_LABELS};
 
   const filtered=filter==='all'?userNotes:userNotes.filter(n=>n.cat===filter);
@@ -875,7 +875,7 @@ function NotesPage({userNotes, onSave}){
         <div className="field"><label>標題</label><input value={editingNote.title} onChange={e=>setEditingNote(p=>({...p,title:e.target.value}))} placeholder="例：今日觀察"/></div>
         <div className="field"><label>分類</label>
           <select value={editingNote.cat} onChange={e=>setEditingNote(p=>({...p,cat:e.target.value}))}>
-            {['strategy','operation','special','other'].map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
+            {['stock','finance','data','exam','other'].map(c=><option key={c} value={c}>{CAT_LABELS[c]}</option>)}
           </select></div>
         <div className="field"><label>內容</label><textarea value={editingNote.body} onChange={e=>setEditingNote(p=>({...p,body:e.target.value}))} placeholder="想到什麼都可以寫，支援換行"/></div>
         <div className="modal-btns"><button className="btn" onClick={()=>setModal(null)}>取消</button><button className="btn btn-primary" onClick={saveNote}>儲存</button></div>
@@ -1371,6 +1371,31 @@ function MindPage(){
   });
 
   const saveTree=(t)=>{setTreeData(t);try{localStorage.setItem('mind_tree',JSON.stringify(t));}catch(e){}};
+  const exportMind=()=>{
+    const data={mindTree:treeData,exportDate:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='mind_map_backup.json';
+    a.click();
+  };
+  const importMind=(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        const tree=data.mindTree||data;
+        if(!tree.id)throw new Error();
+        if(!confirm('確定要匯入？這將覆蓋現有的知識地圖結構。'))return;
+        saveTree(tree);
+        alert('✅ 匯入成功！');
+      }catch{alert('❌ 檔案格式錯誤，請確認是正確的知識地圖備份檔');}
+    };
+    reader.readAsText(file);
+    e.target.value='';
+  };
   const saveExpanded=(e)=>{setExpanded(e);try{localStorage.setItem('mind_expanded',JSON.stringify(e));}catch(e){}};
 
   const toggleExpand=(id)=>{
@@ -1572,10 +1597,16 @@ function MindPage(){
   return <div style={{display:'flex',height:'calc(100vh - 52px)',overflow:'hidden'}}>
     {/* Left panel - tree */}
     <div style={{width:360,flexShrink:0,borderRight:'1px solid var(--border)',overflowY:'auto',padding:'1rem'}}>
-      <div style={{marginBottom:12}}>
+      <div style={{marginBottom:8,display:'flex',gap:6}}>
         <input value={search} onChange={e=>setSearch(e.target.value)}
-          style={{width:'100%',padding:'7px 10px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'var(--card)',boxSizing:'border-box'}}
+          style={{flex:1,padding:'7px 10px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:13,background:'var(--card)',boxSizing:'border-box'}}
           placeholder="搜尋筆記…"/>
+      </div>
+      <div style={{display:'flex',gap:6,marginBottom:12}}>
+        <button onClick={exportMind} style={{flex:1,padding:'6px 8px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:11,background:'none',cursor:'pointer',color:'var(--muted)'}}>↓ 匯出地圖</button>
+        <label style={{flex:1,padding:'6px 8px',border:'1.5px solid var(--border)',borderRadius:6,fontSize:11,background:'none',cursor:'pointer',color:'var(--muted)',textAlign:'center'}}>
+          ↑ 匯入地圖<input type="file" accept=".json" style={{display:'none'}} onChange={importMind}/>
+        </label>
       </div>
       {search.trim()
         ? <div>{searchResults.length===0
@@ -2875,7 +2906,7 @@ function FloatingNote({userNotes, onSave}){
         {tab==='write' && <>
           <input style={inputStyle} placeholder="標題（選填，Enter 儲存）" value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&save()}/>
           <select style={inputStyle} value={cat} onChange={e=>setCat(e.target.value)}>
-            {[['strategy','📋 選股策略'],['operation','📊 盤中盤後操作'],['special','⚡ 特殊事件'],['other','其他']].map(([v,l])=><option key={v} value={v}>{l}</option>)}
+            {[['stock','📈 股票操作'],['finance','💡 財商理財'],['data','📊 數據分析'],['exam','🎓 金融證照'],['other','其他']].map(([v,l])=><option key={v} value={v}>{l}</option>)}
           </select>
           <textarea style={taStyle} placeholder="想到什麼就寫，支援換行…" value={body} onChange={e=>setBody(e.target.value)}/>
           <button style={saveBtnStyle} onClick={save}>儲存筆記</button>
@@ -2913,7 +2944,15 @@ function App(){
     });
     // 去重（相同 id 只保留一筆）
     const seen=new Set();
-    return all.filter(n=>{ if(seen.has(n.id)) return false; seen.add(n.id); return true; });
+    let notes=all.filter(n=>{ if(seen.has(n.id)) return false; seen.add(n.id); return true; });
+    // 遷移舊分類到新分類
+    const catMap={
+      strategy:'stock',select:'stock',flow:'stock',entry:'stock',
+      chipread:'stock',exit:'stock',special:'stock',tech:'stock',
+      chip:'stock',fund:'finance',finance:'finance',
+    };
+    notes=notes.map(n=>({...n, cat: catMap[n.cat]||n.cat}));
+    return notes;
   });
   const saveNotes=(notes)=>{setUserNotes(notes);LS.set('da_user_notes',notes)};
   const switchTab=(id)=>{setTab(id);LS.set('da_current_tab',id)};
